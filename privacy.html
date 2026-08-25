@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Gut Log</title>
+<style>
+  :root{
+    --ink:#1E2A28; --ink-soft:#4B5D59; --paper:#EDF1EE; --surface:#FFFFFF;
+    --line:#D7DED9; --teal:#3F6F66; --teal-deep:#2B4E47; --ochre:#B8862B;
+    --brick:#B5533C; --brick-soft:#F3E1DC; --teal-soft:#DEE9E5;
+    --shadow: 0 1px 2px rgba(30,42,40,0.06), 0 4px 14px rgba(30,42,40,0.05);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:60px;}
+  .wrap{max-width:680px;margin:0 auto;padding:24px 20px 0;}
+  .back{display:inline-block;margin-bottom:16px;color:var(--teal-deep);font-size:13px;text-decoration:none;font-weight:600;}
+  .back:hover{text-decoration:underline;}
+  h1{font-family:Georgia,'Source Serif',serif;font-size:26px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;color:var(--teal-deep);}
+  .updated{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:20px;}
+  .card{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:22px 22px 6px;margin-bottom:16px;border:1px solid var(--line);}
+  h2{font-family:Georgia,'Source Serif',serif;font-size:16px;font-weight:600;margin:0 0 10px;color:var(--teal-deep);}
+  p, li{font-size:13.5px;line-height:1.65;color:var(--ink);}
+  p{margin:0 0 14px;}
+  ul{margin:0 0 14px;padding-left:20px;}
+  li{margin-bottom:6px;}
+  strong{color:var(--teal-deep);}
+  .placeholder{background:var(--brick-soft);color:var(--brick);padding:1px 6px;border-radius:5px;font-weight:700;font-size:12.5px;}
+  .contact-box{background:var(--teal-soft);border:1px solid var(--teal);border-radius:10px;padding:14px 16px;margin:10px 0 20px;font-size:13.5px;}
+  .foot-note{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:8px;padding:0 20px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">&larr; Back to Gut Log</a>
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: 25 August 2026</div>
+
+  <div class="card">
+    <h2>1. Who this policy covers</h2>
+    <p>This Privacy Policy explains how <strong>Gut Log</strong> ("the app," "we," "us") collects, uses, stores, and protects your information. It applies to anyone who uses the app, whether or not you've added an email address.</p>
+    <p>The data controller for the purposes of UK GDPR / EU GDPR is: <span class="placeholder">[YOUR NAME OR BUSINESS NAME — add here]</span>.</p>
+  </div>
+
+  <div class="card">
+    <h2>2. What we collect</h2>
+    <p><strong>Account & sign-in.</strong> When you first open the app, we automatically create an anonymous account for you (via Supabase Auth) so your entries are tied to a private, random user ID rather than being fully anonymous with no persistence. No personal details are required for this. If you choose to add an email address, we use it solely to send you a magic sign-in link so your data can follow you across devices.</p>
+    <p><strong>Health & symptom data.</strong> Bristol Stool Scale entries, symptom tags (blood, mucus, urgency, incompleteness), pain levels, and any free-text notes you write. <strong>This is health data</strong> and is treated as a special category of data under GDPR Article 9 — see Section 6.</p>
+    <p><strong>Food data.</strong> Food and product names you log, either typed manually or looked up via barcode scan (see Section 4, third parties).</p>
+    <p><strong>Restroom submissions.</strong> Names, locations/addresses, cleanliness ratings, notes, and photos you submit for restroom spots. <strong>These are visible to every user of the app</strong> — see Section 3.</p>
+    <p><strong>Location data.</strong> If you tap "Use my location" or "Find nearby," your device's GPS coordinates are requested with your browser's explicit permission. Coordinates you attach to a saved restroom are stored and shown to other users; a one-off "find nearby" search is not stored by us at all (it opens Google Maps directly).</p>
+    <p><strong>Billing data.</strong> If you subscribe to a premium plan, payment is handled entirely by Stripe — we never see or store your card details. We store only your subscription tier (e.g. "monthly," "annual," "lifetime"), Stripe customer ID, and Stripe subscription ID, so we can recognise your paid status.</p>
+    <p><strong>Technical data.</strong> Standard web request logs (IP address, browser type, timestamps) may be retained briefly by our hosting and database providers for security and debugging.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. User-generated restroom info & photos</h2>
+    <p>Restroom spots you save — including name, location, rating, notes, and any photo — are stored as <strong>shared, public data</strong> visible to every user of the app. Please don't include your own or anyone else's personal or identifying information in these submissions. By submitting a restroom entry or photo, you confirm you have the right to share it and you grant other users of the app the right to view it, and grant us the right to store, display, and moderate it (including removing entries that are inaccurate, abusive, or unlawful).</p>
+    <p>Photos are uploaded to secure cloud storage and served publicly by URL so the app can display them; they are not analysed, sold, or used for any purpose beyond displaying the restroom listing.</p>
+  </div>
+
+  <div class="card">
+    <h2>4. Who we share data with</h2>
+    <p>We use a small number of trusted processors to run the app. We don't sell your data, and we don't share your symptom or health data with any of them beyond what's needed to run the service:</p>
+    <ul>
+      <li><strong>Supabase</strong> — database, authentication, and file storage (hosted in the UK/EU).</li>
+      <li><strong>Stripe</strong> — payment processing for premium subscriptions. Stripe's own privacy policy governs the payment details you enter directly with them.</li>
+      <li><strong>Open Food Facts</strong> — an open food database we query using the barcode you scan, to fetch product names. The barcode is sent to their public API; no other personal data is sent.</li>
+      <li><strong>Google Maps</strong> — used only when you tap "Open nearby restrooms in Maps," which opens Google Maps directly in your browser with your current coordinates in the URL. This happens outside the app; Google's own privacy policy applies to that search.</li>
+    </ul>
+    <p>We may also disclose information if required by law, or to protect the safety of our users.</p>
+  </div>
+
+  <div class="card">
+    <h2>5. Data storage & retention</h2>
+    <p>Your data is stored in Supabase's managed Postgres database and file storage, hosted in the United Kingdom. We keep your entries for as long as your account is active. If you'd like your data permanently deleted, contact us (Section 9) and we will erase your account data within 30 days, except where we're required to retain limited billing records for tax/legal purposes.</p>
+    <p>You can delete individual log entries or restroom submissions yourself at any time directly in the app — this removes them immediately and permanently.</p>
+  </div>
+
+  <div class="card">
+    <h2>6. Special category (health) data & your consent</h2>
+    <p>Bowel symptom logs are health data under GDPR Article 9, which requires an extra legal basis beyond ordinary personal data. We rely on your <strong>explicit consent</strong> — given when you accept this Privacy Policy in the app — as that legal basis. You can withdraw consent at any time by deleting your entries or your account; withdrawing consent doesn't affect the lawfulness of processing before withdrawal.</p>
+  </div>
+
+  <div class="card">
+    <h2>7. Your rights (GDPR / UK GDPR)</h2>
+    <p>Depending on your location, you have the right to:</p>
+    <ul>
+      <li>Access the personal data we hold about you</li>
+      <li>Correct inaccurate data</li>
+      <li>Request erasure of your data ("right to be forgotten")</li>
+      <li>Request a portable copy of your data (available in-app via the Export button for your log entries)</li>
+      <li>Object to or restrict certain processing</li>
+      <li>Withdraw consent at any time</li>
+      <li>Lodge a complaint with your local data protection authority (in the UK, the ICO — ico.org.uk)</li>
+    </ul>
+    <p>To exercise any of these rights, contact us using the details in Section 9.</p>
+  </div>
+
+  <div class="card">
+    <h2>8. International transfers, cookies & children</h2>
+    <p><strong>International transfers.</strong> Our primary hosting is UK-based. Some processors above (e.g. Stripe) may process data outside the UK/EU under standard contractual safeguards.</p>
+    <p><strong>Cookies.</strong> The app itself does not use tracking or advertising cookies. It uses browser local storage only to remember your consent choice and login session.</p>
+    <p><strong>Children.</strong> Gut Log is not directed at children under 16. We don't knowingly collect data from children under 16; if you believe a child has used the app, please contact us so we can delete the data.</p>
+  </div>
+
+  <div class="card">
+    <h2>9. Contact us</h2>
+    <div class="contact-box">
+      For any privacy question, data request, or complaint, contact:<br>
+      <span class="placeholder">[ADD YOUR CONTACT EMAIL HERE]</span>
+    </div>
+    <h2>10. Changes to this policy</h2>
+    <p>We may update this policy from time to time. Material changes will be reflected in the "Last updated" date above, and where required, we'll ask for renewed consent in the app.</p>
+  </div>
+
+  <div class="foot-note">This policy is provided as general information and does not constitute legal advice. Consider having it reviewed by a qualified professional for your specific circumstances.</div>
+</div>
+</body>
+</html>
