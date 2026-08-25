@@ -1085,15 +1085,17 @@ const CONSENT_KEY = 'gutlog_consent_v1';
 const consentGate = document.getElementById('consentGate');
 const consentCheckbox = document.getElementById('consentCheckbox');
 const consentContinueBtn = document.getElementById('consentContinueBtn');
-if(localStorage.getItem(CONSENT_KEY) === 'true'){
-  consentGate.classList.add('hidden');
-}
+try{
+  if(localStorage.getItem(CONSENT_KEY) === 'true'){
+    consentGate.classList.add('hidden');
+  }
+}catch(e){ console.error('consent storage read failed', e); }
 consentCheckbox.addEventListener('change', ()=>{
   consentContinueBtn.disabled = !consentCheckbox.checked;
 });
 consentContinueBtn.addEventListener('click', ()=>{
   if(!consentCheckbox.checked) return;
-  localStorage.setItem(CONSENT_KEY, 'true');
+  try{ localStorage.setItem(CONSENT_KEY, 'true'); }catch(e){ console.error('consent storage write failed', e); }
   consentGate.classList.add('hidden');
 });
 const SUPABASE_URL = 'https://jtdqtfyaauzykatpikik.supabase.co';
