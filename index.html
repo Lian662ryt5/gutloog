@@ -1111,9 +1111,9 @@ async function ensureAuth(){
 
 /* ---- Pricing / Stripe checkout ---- */
 const PLANS = [
-  { key: 'monthly', name: 'Monthly', price: '£3.99', period: '/month', link: 'https://buy.stripe.com/test_cNi9AU2LZe2E74tcDc9oc02' },
-  { key: 'annual', name: 'Annual', price: '£24.99', period: '/year', badge: '7-day free trial · Best value', link: 'https://buy.stripe.com/test_9B6aEY5Yb0bO88xfPo9oc00' },
-  { key: 'lifetime', name: 'Lifetime', price: '£39.99', period: ' once', link: 'https://buy.stripe.com/test_bJe6oI2LZ5w89cBgTs9oc03' }
+  { key: 'monthly', name: 'Monthly', price: '£3.99', period: '/month', link: 'https://buy.stripe.com/4gMbJ3d8a2ei0tS8Me97G05' },
+  { key: 'annual', name: 'Annual', price: '£24.99', period: '/year', badge: '7-day free trial · Best value', link: 'https://buy.stripe.com/00w4gBece8CGb8wbYq97G04' },
+  { key: 'lifetime', name: 'Lifetime', price: '£39.99', period: ' once', link: 'https://buy.stripe.com/cNi6oJ5FI5qufoMfaC97G01' }
 ];
 let currentTier = 'free';
 let currentUserId = null;
@@ -1200,7 +1200,8 @@ function renderCheckoutReturnBanner(){
   const params = new URLSearchParams(window.location.search);
   const status = params.get('checkout');
   if(status === 'success'){
-    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — your plan will update within a few seconds.</div>`;
+    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — checking your account…</div>`;
+    pollTierAfterCheckout(slot);
   } else if(status === 'cancel'){
     slot.innerHTML = `<div class="checkout-banner cancel">Checkout was cancelled — no payment was taken.</div>`;
   }
@@ -1208,6 +1209,25 @@ function renderCheckoutReturnBanner(){
     params.delete('checkout');
     const newUrl = window.location.pathname + (params.toString() ? '?'+params.toString() : '');
     window.history.replaceState({}, '', newUrl);
+  }
+}
+
+// After a successful checkout, the webhook may take a few seconds to credit
+// the account, so a single tier fetch on page load can race ahead of it.
+// Poll briefly and update the banner once the tier actually changes (or
+// give up gracefully so the user isn't left staring at "checking...").
+async function pollTierAfterCheckout(slot){
+  const tierBefore = currentTier;
+  for(let attempt = 0; attempt < 6; attempt++){
+    await new Promise(r=>setTimeout(r, 2500));
+    try{ await loadProfileTier(); }catch(e){ console.error('tier refresh after checkout failed', e); }
+    if(currentTier !== tierBefore) break;
+  }
+  if(currentTier !== tierBefore){
+    const planName = PLANS.find(p=>p.key===currentTier)?.name || currentTier;
+    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — your ${planName} plan is now active.</div>`;
+  } else {
+    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — this can take a minute to show up here. Refresh if your plan hasn't updated shortly.</div>`;
   }
 }
 
