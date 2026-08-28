@@ -1157,7 +1157,7 @@ async function loadProfileTier(){
       const { data, error } = await sb.from('profiles').select('tier, theme, username, avatar_url, created_at').eq('id', user.id).maybeSingle();
       if(!error && data){
         if(data.tier) currentTier = data.tier;
-        if(currentTier !== 'free' && data.theme){ applyTheme(data.theme, false); }
+        if(currentTier !== 'free' && data.theme){ applyTheme(data.theme); }
         currentUsername = data.username || null;
         currentAvatarUrl = data.avatar_url || null;
         profileCreatedAt = data.created_at || null;
