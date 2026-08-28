@@ -1219,6 +1219,16 @@ function renderCheckoutReturnBanner(){
   }
 }
 
+// Recover from the browser back-forward cache: if the user navigated to
+// Stripe Checkout and hit Back instead of completing/cancelling there, the
+// page is restored from a frozen snapshot rather than re-run, so a plan
+// button left mid-"Loading…" (set just before the redirect in
+// startCheckout) would otherwise stay disabled forever. Re-fetching the
+// tier also picks up a payment that completed while the user was away.
+window.addEventListener('pageshow', (e)=>{
+  if(e.persisted) loadProfileTier();
+});
+
 /* ---- Premium Themes ---- */
 const THEMES = [
   { key:'default', name:'Default', swatch:['#EDF1EE','#3F6F66','#2B4E47'] },
