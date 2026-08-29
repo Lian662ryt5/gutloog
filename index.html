@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gut Log — IBD Tracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3F6F66">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
     --ink:#1E2A28;
@@ -57,8 +62,10 @@
     transition: background-color .4s ease, color .4s ease, border-color .4s ease, box-shadow .4s ease;
   }
   *{box-sizing:border-box;}
-  button, a{-webkit-tap-highlight-color:transparent;}
+  button, a{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  button:active:not(:disabled){opacity:.7;transform:scale(.97);}
   body{
+    overscroll-behavior-y:contain;
     margin:0;
     background:var(--paper);
     color:var(--ink);
@@ -977,7 +984,7 @@
           <option value="5">5★ only</option>
         </select>
       </div>
-      <div id="restList"><div class="empty">No spots saved yet.</div></div>
+      <div id="restList"><div class="empty">Loading…</div></div>
     </div>
   </div>
 
