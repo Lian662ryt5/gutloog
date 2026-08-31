@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gut Log — IBD Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3F6F66">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
     --ink:#1E2A28;
@@ -61,8 +67,10 @@
     transition: background-color .4s ease;
   }
   *{box-sizing:border-box;}
-  button, a{-webkit-tap-highlight-color:transparent;}
+  button, a{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  button:active:not(:disabled){opacity:.7;transform:scale(.97);}
   body{
+    overscroll-behavior-y:contain;
     margin:0;
     background:var(--paper);
     color:var(--ink);
@@ -1007,7 +1015,7 @@
           <option value="5">5★ only</option>
         </select>
       </div>
-      <div id="restList"><div class="empty">No spots saved yet.</div></div>
+      <div id="restList"><div class="empty">Loading…</div></div>
     </div>
   </div>
 
@@ -1127,7 +1135,7 @@ consentContinueBtn.addEventListener('click', ()=>{
   localStorage.setItem(CONSENT_KEY, 'true');
   consentGate.classList.add('hidden');
 });
-const SUPABASE_URL = 'https://jtdqtfyaauzykatpikik.supabase.co';
+const SUPABASE_URL = 'https://iftxfnhwdyqzllzmjoca.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Mf-INKOUbWP12FQnW8bQrA_b_zJoZXh';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
@@ -1260,11 +1268,10 @@ window.addEventListener('online', syncOfflineQueue);
 setInterval(syncOfflineQueue, 30000);
 
 /* ---- Pricing / Stripe checkout ---- */
-const FUNCTIONS_BASE = `${SUPABASE_URL}/functions/v1`;
 const PLANS = [
-  { key: 'monthly', name: 'Monthly', price: '£3.99', period: '/month' },
-  { key: 'annual', name: 'Annual', price: '£24.99', period: '/year', badge: '7-day free trial · Best value' },
-  { key: 'lifetime', name: 'Lifetime', price: '£39.99', period: ' once' }
+  { key: 'monthly', name: 'Monthly', price: '£3.99', period: '/month', link: 'https://buy.stripe.com/4gMbJ3d8a2ei0tS8Me97G05' },
+  { key: 'annual', name: 'Annual', price: '£24.99', period: '/year', badge: '7-day free trial · Best value', link: 'https://buy.stripe.com/00w4gBece8CGb8wbYq97G04' },
+  { key: 'lifetime', name: 'Lifetime', price: '£39.99', period: ' once', link: 'https://buy.stripe.com/5kQbJ35FI3imfoMgeG97G02' }
 ];
 let currentTier = 'free';
 let currentUserId = null;
@@ -1308,7 +1315,7 @@ async function loadProfileTier(){
       const { data, error } = await sb.from('profiles').select('tier, theme, username, avatar_url, created_at').eq('id', user.id).maybeSingle();
       if(!error && data){
         if(data.tier) currentTier = data.tier;
-        if(currentTier !== 'free' && data.theme){ applyTheme(data.theme, false); }
+        if(currentTier !== 'free' && data.theme){ applyTheme(data.theme); }
         currentUsername = data.username || null;
         currentAvatarUrl = data.avatar_url || null;
         profileCreatedAt = data.created_at || null;
@@ -1324,31 +1331,23 @@ async function loadProfileTier(){
 async function startCheckout(plan, btn){
   if(btn){ btn.disabled = true; btn.textContent = 'Loading…'; }
   try{
+    const planDef = PLANS.find(p=>p.key === plan);
+    if(!planDef || !planDef.link) throw new Error('This plan is not available right now.');
+
     let { data: { session } } = await sb.auth.getSession();
     if(!session){
       await ensureAuth();
       ({ data: { session } } = await sb.auth.getSession());
     }
-    if(!session){
-      alert('Please wait a moment for sign-in to finish, then try again.');
-      if(btn){ btn.disabled = false; btn.textContent = 'Choose'; }
-      return;
-    }
-    const res = await fetch(`${FUNCTIONS_BASE}/create-checkout-session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-        'apikey': SUPABASE_PUBLISHABLE_KEY
-      },
-      body: JSON.stringify({ plan })
-    });
-    const data = await res.json();
-    if(!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
-    window.location.href = data.url;
+    if(!session) throw new Error('Please wait a moment for sign-in to finish, then try again.');
+
+    const url = new URL(planDef.link);
+    url.searchParams.set('client_reference_id', session.user.id);
+    window.location.href = url.toString();
   }catch(e){
     console.error('checkout failed', e);
-    alert('Could not start checkout — please try again in a moment.');
+    alert(e.message || 'Could not open checkout — please check your connection and try again.');
+  }finally{
     if(btn){ btn.disabled = false; btn.textContent = 'Choose'; }
   }
 }
@@ -1359,7 +1358,8 @@ function renderCheckoutReturnBanner(){
   const params = new URLSearchParams(window.location.search);
   const status = params.get('checkout');
   if(status === 'success'){
-    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — your plan will update within a few seconds.</div>`;
+    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — checking your account…</div>`;
+    pollTierAfterCheckout(slot);
   } else if(status === 'cancel'){
     slot.innerHTML = `<div class="checkout-banner cancel">Checkout was cancelled — no payment was taken.</div>`;
   }
@@ -1369,6 +1369,35 @@ function renderCheckoutReturnBanner(){
     window.history.replaceState({}, '', newUrl);
   }
 }
+
+// After a successful checkout, the webhook may take a few seconds to credit
+// the account, so a single tier fetch on page load can race ahead of it.
+// Poll briefly and update the banner once the tier actually changes (or
+// give up gracefully so the user isn't left staring at "checking...").
+async function pollTierAfterCheckout(slot){
+  const tierBefore = currentTier;
+  for(let attempt = 0; attempt < 6; attempt++){
+    await new Promise(r=>setTimeout(r, 2500));
+    try{ await loadProfileTier(); }catch(e){ console.error('tier refresh after checkout failed', e); }
+    if(currentTier !== tierBefore) break;
+  }
+  if(currentTier !== tierBefore){
+    const planName = PLANS.find(p=>p.key===currentTier)?.name || currentTier;
+    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — your ${planName} plan is now active.</div>`;
+  } else {
+    slot.innerHTML = `<div class="checkout-banner success">✓ Payment received — this can take a minute to show up here. Refresh if your plan hasn't updated shortly.</div>`;
+  }
+}
+
+// Recover from the browser back-forward cache: if the user navigated to
+// Stripe Checkout and hit Back instead of completing/cancelling there, the
+// page is restored from a frozen snapshot rather than re-run, so a plan
+// button left mid-"Loading…" (set just before the redirect in
+// startCheckout) would otherwise stay disabled forever. Re-fetching the
+// tier also picks up a payment that completed while the user was away.
+window.addEventListener('pageshow', (e)=>{
+  if(e.persisted) loadProfileTier();
+});
 
 /* ---- Premium Themes ---- */
 const THEMES = [
