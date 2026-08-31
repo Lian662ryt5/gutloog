@@ -919,6 +919,11 @@
     <h2>Log food</h2>
     <button class="scan-btn" id="scanBarcodeBtn">📷 Scan a barcode</button>
     <div class="food-preview" id="foodPreview"></div>
+    <div class="photo-row">
+      <button class="photo-btn" id="foodPhotoBtn" type="button">📷 Add a photo of your meal</button>
+      <input type="file" id="foodPhotoInput" accept="image/*" capture="environment" style="display:none;">
+      <img id="foodPhotoPreview" class="photo-preview" style="display:none;">
+    </div>
     <div class="food-divider">or add manually</div>
     <div class="food-manual">
       <input type="text" id="foodNameInput" placeholder="Product or meal name">
@@ -2068,14 +2073,75 @@ document.getElementById('foodManualBtn').addEventListener('click', async ()=>{
   btn.textContent = 'Log';
 });
 
+let attachedFoodPhotoBlob = null;
+let attachedFoodPhotoPreviewUrl = null;
+
+function clearAttachedFoodPhoto(){
+  if(attachedFoodPhotoPreviewUrl){ URL.revokeObjectURL(attachedFoodPhotoPreviewUrl); attachedFoodPhotoPreviewUrl = null; }
+  attachedFoodPhotoBlob = null;
+  const preview = document.getElementById('foodPhotoPreview');
+  preview.style.display = 'none';
+  preview.src = '';
+  document.getElementById('foodPhotoInput').value = '';
+}
+
+document.getElementById('foodPhotoBtn').addEventListener('click', ()=> document.getElementById('foodPhotoInput').click());
+document.getElementById('foodPhotoInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    img.onload = ()=>{
+      const maxW = 640;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob=>{
+        if(!blob) return;
+        attachedFoodPhotoBlob = blob;
+        if(attachedFoodPhotoPreviewUrl) URL.revokeObjectURL(attachedFoodPhotoPreviewUrl);
+        attachedFoodPhotoPreviewUrl = URL.createObjectURL(blob);
+        const preview = document.getElementById('foodPhotoPreview');
+        preview.src = attachedFoodPhotoPreviewUrl;
+        preview.style.display = 'block';
+      }, 'image/jpeg', 0.7);
+    };
+    img.onerror = () => console.error('food photo load failed');
+    img.src = ev.target.result;
+  };
+  reader.onerror = () => console.error('food photo read failed');
+  reader.readAsDataURL(file);
+});
+
+async function uploadFoodPhoto(blob){
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+  const { error: uploadError } = await sb.storage.from('food-photos').upload(path, blob, { contentType: 'image/jpeg' });
+  if(uploadError) throw uploadError;
+  const { data } = sb.storage.from('food-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 async function saveFoodEntry(f){
+  let image = f.image || '';
+  if(attachedFoodPhotoBlob){
+    try{
+      image = await uploadFoodPhoto(attachedFoodPhotoBlob);
+    }catch(e){
+      console.error('food photo upload failed', e);
+      alert('Could not upload your photo — saving the entry without it.');
+    }
+  }
   const row = {
     ts: new Date().toISOString(),
     kind: 'food',
     food_name: f.name,
     food_brand: f.brand || '',
     food_barcode: f.barcode || null,
-    food_image: f.image || '',
+    food_image: image,
     note: ''
   };
   try{
@@ -2083,6 +2149,7 @@ async function saveFoodEntry(f){
     const { data, error } = await sb.from('entries').insert(row).select().single();
     if(error) throw error;
     entries.unshift(rowToEntry(data));
+    clearAttachedFoodPhoto();
   }catch(e){
     if(isNetworkError(e)){
       const localId = await queueOfflineEntry(row);
@@ -2091,6 +2158,7 @@ async function saveFoodEntry(f){
       localEntry.pendingSync = true;
       entries.unshift(localEntry);
       showToast('Saved offline. Will sync when connection is restored.');
+      clearAttachedFoodPhoto();
     } else {
       console.error('save food entry failed', e);
       alert('Could not save — check your connection.');
