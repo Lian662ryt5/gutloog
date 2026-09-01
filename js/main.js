@@ -13,5 +13,6 @@ function init(){
   loadProfileTier();
   loadReminderSettings();
   handleReminderUrlParams();
+  showOnboardingIfNeeded(); // no-op if consent isn't accepted yet, or already onboarded
 }
 init();

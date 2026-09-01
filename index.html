@@ -27,6 +27,19 @@
     <button class="save-btn" id="consentContinueBtn" disabled>Continue</button>
   </div>
 </div>
+<div class="onboarding-gate hidden" id="onboardingGate">
+  <div class="onboarding-card">
+    <button class="onboarding-skip" id="onboardingSkipBtn" type="button">Skip</button>
+    <div class="onboarding-icon" id="onboardingIcon" aria-hidden="true"></div>
+    <h2 id="onboardingTitle"></h2>
+    <p id="onboardingBody"></p>
+    <div class="onboarding-dots" id="onboardingDots" role="progressbar" aria-label="Onboarding progress"></div>
+    <div class="onboarding-actions">
+      <button class="loc-btn" id="onboardingBackBtn" type="button">Back</button>
+      <button class="save-btn" id="onboardingNextBtn" type="button" style="margin-top:0;">Next</button>
+    </div>
+  </div>
+</div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -339,6 +352,7 @@
 <script src="js/trends.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

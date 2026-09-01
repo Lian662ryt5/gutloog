@@ -7,7 +7,7 @@
 
    Bump CACHE_VERSION whenever the shell file list below changes, so
    returning visitors pick up the new files instead of a stale cache. */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `gutlog-shell-${CACHE_VERSION}`;
 
 const SHELL_FILES = [
@@ -31,6 +31,8 @@ const SHELL_FILES = [
   'js/restrooms.js',
   'js/trends.js',
   'js/reminders.js',
+  'js/dashboard.js',
+  'js/onboarding.js',
   'js/main.js'
 ];
 
