@@ -60,14 +60,14 @@
       <h2>What do you need right now?</h2>
       <div class="home-choices">
         <div class="choice-card" data-goto="log" role="button" tabindex="0" aria-label="Log a visit">
-          <div class="choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
           <div class="choice-text">
             <div class="ctitle">Log a visit</div>
             <div class="cdesc">Record Bristol type, symptoms, and notes right after you go.</div>
           </div>
         </div>
         <div class="choice-card" data-goto="restrooms" role="button" tabindex="0" aria-label="Find or save a restroom">
-          <div class="choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+          <div class="choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
           <div class="choice-text">
             <div class="ctitle">Find or save a restroom</div>
             <div class="cdesc">Find one nearby, or check your saved list of clean, trusted spots.</div>
@@ -92,7 +92,7 @@
     </div>
     <div class="food-divider">or add manually</div>
     <div class="food-manual">
-      <input type="text" id="foodNameInput" placeholder="Product or meal name">
+      <input type="text" id="foodNameInput" placeholder="Product or meal name" aria-label="Product or meal name">
       <button id="foodManualBtn">Log</button>
     </div>
   </div>
@@ -103,8 +103,8 @@
     <div class="bristol-grid" id="bristolGrid"></div>
 
     <div class="scale-row">
-      <label>Anything present?</label>
-      <div class="row-toggles">
+      <label id="presentLabel">Anything present?</label>
+      <div class="row-toggles" role="group" aria-labelledby="presentLabel">
         <button class="toggle" data-tag="blood">Blood</button>
         <button class="toggle" data-tag="mucus">Mucus</button>
         <button class="toggle" data-tag="urgent">Urgency</button>
@@ -118,14 +118,14 @@
     </div>
 
     <div class="scale-row">
-      <label>Where was this?</label>
+      <label for="restLinkSelect">Where was this?</label>
       <select class="rest-select" id="restLinkSelect">
         <option value="">Not linked to a saved spot</option>
       </select>
     </div>
 
     <div class="scale-row">
-      <label>Notes (food, stress, meds — whatever's useful to remember)</label>
+      <label for="noteInput">Notes (food, stress, meds — whatever's useful to remember)</label>
       <textarea id="noteInput" placeholder="e.g. after coffee, before work meeting"></textarea>
     </div>
 
@@ -144,7 +144,7 @@
     <div class="card">
       <h2>Find one nearby</h2>
       <button class="find-btn" id="findNearbyBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         <span id="findNearbyLabel">Open nearby public restrooms in Maps</span>
       </button>
       <div class="foot-note" style="margin-top:10px;">Opens a live search in Google Maps for restrooms near your current location.</div>
@@ -156,17 +156,17 @@
       <h2>Save a spot <span class="shared-badge">Shared</span></h2>
       <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Spots you save here — including the address and photo — are visible to everyone using this app, so the list stays useful for the group. Don't include anything you'd want kept private.</div>
       <div class="rest-form">
-        <input type="text" id="restName" placeholder="Place name (e.g. Waterstones, 2nd floor)">
+        <input type="text" id="restName" placeholder="Place name (e.g. Waterstones, 2nd floor)" aria-label="Place name">
         <div class="loc-row">
-          <input type="text" id="restLoc" placeholder="Area / address" style="flex:1;">
+          <input type="text" id="restLoc" placeholder="Area / address" style="flex:1;" aria-label="Area or address">
           <button class="loc-btn" id="useLocBtn" type="button">📍 Use my location</button>
         </div>
         <div id="consentPanel"></div>
         <div id="locAttached"></div>
-        <label style="font-size:12px;color:var(--ink-soft);display:block;margin-bottom:6px;">How clean?</label>
+        <label id="cleanScaleLabel" style="font-size:12px;color:var(--ink-soft);display:block;margin-bottom:6px;">How clean?</label>
         <div class="clean-scale" id="cleanScale"></div>
         <div class="quick-flags" id="restFlags"></div>
-        <textarea id="restNote" placeholder="Notes — code needed, customers only, always stocked, etc."></textarea>
+        <textarea id="restNote" placeholder="Notes — code needed, customers only, always stocked, etc." aria-label="Notes"></textarea>
         <div class="photo-row">
           <button class="photo-btn" id="photoBtn" type="button">📷 Add a photo of the entrance/shop</button>
           <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
@@ -179,8 +179,8 @@
     <div class="card">
       <h2>Your saved spots</h2>
       <div class="filter-row">
-        <input type="text" id="filterArea" placeholder="Filter by area…">
-        <select id="filterStars">
+        <input type="text" id="filterArea" placeholder="Filter by area…" aria-label="Filter by area">
+        <select id="filterStars" aria-label="Filter by minimum rating">
           <option value="0">Any rating</option>
           <option value="3">3★ and up</option>
           <option value="4">4★ and up</option>
@@ -254,7 +254,7 @@
     <div class="card">
       <h2>Badge progress</h2>
       <div class="progress-ring-row">
-        <svg class="progress-ring" viewBox="0 0 120 120">
+        <svg class="progress-ring" viewBox="0 0 120 120" aria-hidden="true">
           <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
           <circle class="ring-fill" id="ringFillCircle" cx="60" cy="60" r="52"></circle>
           <text x="60" y="67" text-anchor="middle" class="ring-text" id="ringText">0/8</text>

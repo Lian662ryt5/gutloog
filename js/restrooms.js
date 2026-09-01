@@ -5,14 +5,23 @@ let selectedRestFlags = new Set();
 const REST_FLAG_LABELS = {private:'Private/lockable', paper:'Always stocked', code:'Code needed', customers:'Customers only', accessible:'Accessible'};
 
 const cleanScale = document.getElementById('cleanScale');
+cleanScale.setAttribute('role', 'group');
+cleanScale.setAttribute('aria-labelledby', 'cleanScaleLabel');
 for(let i=1;i<=5;i++){
-  const d = document.createElement('div');
+  const d = document.createElement('button');
+  d.type = 'button';
   d.className = 'cdot';
   d.textContent = '★';
   d.dataset.v = i;
+  d.setAttribute('aria-label', `${i} star${i>1?'s':''}`);
+  d.setAttribute('aria-pressed', 'false');
   d.addEventListener('click', ()=>{
     selectedClean = i;
-    [...cleanScale.children].forEach(c=>c.classList.toggle('on', +c.dataset.v <= i));
+    [...cleanScale.children].forEach(c=>{
+      const v = +c.dataset.v;
+      c.classList.toggle('on', v <= i);
+      c.setAttribute('aria-pressed', String(v === i));
+    });
   });
   cleanScale.appendChild(d);
 }
@@ -233,7 +242,7 @@ document.getElementById('saveRestBtn').addEventListener('click', async ()=>{
   renderLocAttached();
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('photoInput').value = '';
-  [...cleanScale.children].forEach(c=>c.classList.remove('on'));
+  [...cleanScale.children].forEach(c=>{ c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); });
   restFlagsWrap.querySelectorAll('.toggle').forEach(b=>b.classList.remove('on'));
   restBtn.disabled = false;
   restBtn.textContent = 'Save restroom';
@@ -274,7 +283,7 @@ function renderRestrooms(){
   list.innerHTML = sorted.map(r=>{
     const stars = '★'.repeat(r.clean||0) + '☆'.repeat(5-(r.clean||0));
     const tags = r.flags.map(f=>`<span class="tag">${REST_FLAG_LABELS[f]||f}</span>`).join('');
-    const photo = r.photo ? `<img class="rphoto" src="${r.photo}">` : '';
+    const photo = r.photo ? `<img class="rphoto" src="${r.photo}" alt="Photo of ${escapeHtml(r.name)}" loading="lazy" decoding="async">` : '';
     const mapLink = r.coords ? ` · <a href="https://www.google.com/maps?q=${r.coords.lat},${r.coords.lng}" target="_blank">map</a>` : '';
     return `<div class="rest-card">
       ${photo}

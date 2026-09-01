@@ -115,7 +115,7 @@ async function renderEmailBanner(){
       <div class="eb-title">⚠️ Your data lives only on this device</div>
       Add your email so you never lose your history — no password needed, just a confirmation link.
       <div class="eb-row">
-        <input type="email" id="secureEmailInput" placeholder="you@example.com">
+        <input type="email" id="secureEmailInput" placeholder="you@example.com" aria-label="Email address">
         <button id="secureEmailBtn">Save</button>
       </div>
     </div>`;

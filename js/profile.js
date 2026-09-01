@@ -151,7 +151,7 @@ function bindProfileEvents(){
   usernameEditBtn.addEventListener('click', ()=>{
     const slot = document.getElementById('usernameEditSlot');
     slot.innerHTML = `<div class="card"><div class="username-edit-row">
-      <input type="text" id="usernameInput" maxlength="40" placeholder="Enter a username" value="${escapeHtml(currentUsername||'')}">
+      <input type="text" id="usernameInput" maxlength="40" placeholder="Enter a username" aria-label="Username" value="${escapeHtml(currentUsername||'')}">
       <button class="username-save-btn" type="button" id="usernameSaveBtn">Save</button>
       <button class="username-cancel-btn" type="button" id="usernameCancelBtn" aria-label="Cancel editing username">✕</button>
     </div></div>`;
