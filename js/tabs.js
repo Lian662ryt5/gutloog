@@ -1,6 +1,10 @@
 /* ---- Tabs ---- */
 function switchTab(name){
-  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.tabbtn').forEach(b=>{
+    const isSel = b.dataset.tab===name;
+    b.classList.toggle('active', isSel);
+    b.setAttribute('aria-selected', String(isSel));
+  });
   document.querySelectorAll('.tabpage').forEach(p=>p.classList.toggle('active', p.id==='page-'+name));
   if(name === 'trends' && localStorage.getItem(VISITED_TRENDS_KEY) !== 'true'){
     localStorage.setItem(VISITED_TRENDS_KEY, 'true');

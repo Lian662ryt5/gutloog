@@ -49,17 +49,17 @@
     <button class="export-btn" id="exportBtn" aria-label="Export log data as CSV">Export</button>
   </header>
 
-  <div class="tabbar">
-    <button class="tabbtn active" data-tab="home">Home</button>
-    <button class="tabbtn" data-tab="log">Log</button>
-    <button class="tabbtn" data-tab="restrooms">Restrooms</button>
-    <button class="tabbtn" data-tab="trends">Trends</button>
-    <button class="tabbtn" data-tab="themes">Themes</button>
-    <button class="tabbtn" data-tab="achievements">Badges</button>
-    <button class="tabbtn" data-tab="profile">Profile</button>
+  <div class="tabbar" role="tablist" aria-label="Sections">
+    <button class="tabbtn active" id="tab-home" data-tab="home" role="tab" aria-selected="true" aria-controls="page-home">Home</button>
+    <button class="tabbtn" id="tab-log" data-tab="log" role="tab" aria-selected="false" aria-controls="page-log">Log</button>
+    <button class="tabbtn" id="tab-restrooms" data-tab="restrooms" role="tab" aria-selected="false" aria-controls="page-restrooms">Restrooms</button>
+    <button class="tabbtn" id="tab-trends" data-tab="trends" role="tab" aria-selected="false" aria-controls="page-trends">Trends</button>
+    <button class="tabbtn" id="tab-themes" data-tab="themes" role="tab" aria-selected="false" aria-controls="page-themes">Themes</button>
+    <button class="tabbtn" id="tab-achievements" data-tab="achievements" role="tab" aria-selected="false" aria-controls="page-achievements">Badges</button>
+    <button class="tabbtn" id="tab-profile" data-tab="profile" role="tab" aria-selected="false" aria-controls="page-profile">Profile</button>
   </div>
 
-  <div class="tabpage active" id="page-home">
+  <div class="tabpage active" id="page-home" role="tabpanel" aria-labelledby="tab-home">
     <div class="card" id="pricingCard">
       <h2>Go Premium <span class="plan-badge free" id="planBadge">Free</span></h2>
       <div id="checkoutBannerSlot"></div>
@@ -119,7 +119,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-log">
+  <div class="tabpage" id="page-log" role="tabpanel" aria-labelledby="tab-log">
   <div class="stats-strip" id="statsStrip"></div>
 
   <div class="card">
@@ -181,7 +181,7 @@
   <div class="foot-note">Personal tracking only — not a diagnosis or medical advice. Worth bringing this log to your GI appointments. If you notice heavy bleeding, severe pain, fever, or you're feeling unwell, contact a doctor.</div>
   </div>
 
-  <div class="tabpage" id="page-restrooms">
+  <div class="tabpage" id="page-restrooms" role="tabpanel" aria-labelledby="tab-restrooms">
     <div class="card">
       <h2>Find one nearby</h2>
       <button class="find-btn" id="findNearbyBtn">
@@ -232,7 +232,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-trends">
+  <div class="tabpage" id="page-trends" role="tabpanel" aria-labelledby="tab-trends">
     <div class="card">
       <h2>Trends</h2>
       <div class="trend-tabs">
@@ -257,7 +257,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-themes">
+  <div class="tabpage" id="page-themes" role="tabpanel" aria-labelledby="tab-themes">
     <div class="card">
       <h2>Premium Themes</h2>
       <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Preview any theme free — <span style="color:var(--teal-deep);font-weight:600;">Premium members</span> can save one to keep it every time they open the app.</div>
@@ -266,7 +266,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-achievements">
+  <div class="tabpage" id="page-achievements" role="tabpanel" aria-labelledby="tab-achievements">
     <div class="card">
       <h2>Badges</h2>
       <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Earned automatically as you use the app — nothing to claim.</div>
@@ -274,7 +274,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-profile">
+  <div class="tabpage" id="page-profile" role="tabpanel" aria-labelledby="tab-profile">
     <div class="card profile-header-card">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar" id="profileAvatar"><span id="profileAvatarInitial">?</span></div>

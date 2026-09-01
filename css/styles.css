@@ -460,7 +460,8 @@
     flex:1;
     border:none;
     background:none;
-    padding:9px 4px;
+    padding:12px 4px;
+    min-height:44px;
     font-size:13px;
     font-weight:600;
     color:var(--ink-soft);
