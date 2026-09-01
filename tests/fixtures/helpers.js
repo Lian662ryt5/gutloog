@@ -6,6 +6,7 @@ const SUPABASE_CDN_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const DEFAULT_TABLES = () => ({
   entries: [],
   restrooms: [],
+  restroom_reports: [],
   reminder_settings: [],
   push_subscriptions: [],
   reminder_log: [],
@@ -26,10 +27,18 @@ async function mockSupabase(page, seedTables = {}) {
   await page.addInitScript((t) => { window.__seedTables = t; }, tables);
 }
 
-/** Accepts the legal consent gate and dismisses onboarding, if shown. */
+/**
+ * Accepts the legal consent gate and dismisses onboarding, if shown. Both
+ * gates remember their state in localStorage, so on a page.reload() within
+ * the same test neither reappears - skip the (now-hidden, unclickable)
+ * consent checkbox in that case rather than hanging on it.
+ */
 async function passConsentAndOnboarding(page) {
-  await page.check('#consentCheckbox');
-  await page.click('#consentContinueBtn');
+  const consentVisible = await page.locator('#consentGate').isVisible().catch(() => false);
+  if (consentVisible) {
+    await page.check('#consentCheckbox');
+    await page.click('#consentContinueBtn');
+  }
   const skipBtn = page.locator('#onboardingSkipBtn');
   await skipBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
   if (await skipBtn.isVisible().catch(() => false)) {

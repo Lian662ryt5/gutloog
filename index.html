@@ -57,6 +57,7 @@
     <button class="tabbtn" id="tab-themes" data-tab="themes" role="tab" aria-selected="false" aria-controls="page-themes">Themes</button>
     <button class="tabbtn" id="tab-achievements" data-tab="achievements" role="tab" aria-selected="false" aria-controls="page-achievements">Badges</button>
     <button class="tabbtn" id="tab-profile" data-tab="profile" role="tab" aria-selected="false" aria-controls="page-profile">Profile</button>
+    <button class="tabbtn" id="tab-admin" data-tab="admin" role="tab" aria-selected="false" aria-controls="page-admin" hidden>Admin</button>
   </div>
 
   <div class="tabpage active" id="page-home" role="tabpanel" aria-labelledby="tab-home">
@@ -296,6 +297,13 @@
         <span class="plan-badge" id="profileTierBadge">Free</span>
       </div>
     </div>
+    <div class="card" id="accountIdCard">
+      <div class="foot-note" style="margin:0 0 8px;padding:0;text-align:left;">Your account ID — share this if you ever need to be granted moderator/admin access.</div>
+      <div class="account-id-row">
+        <code id="accountIdValue">—</code>
+        <button class="loc-btn" type="button" id="copyAccountIdBtn">Copy</button>
+      </div>
+    </div>
     <div id="usernameEditSlot"></div>
 
     <div class="card">
@@ -332,6 +340,14 @@
     </div>
   </div>
 
+  <div class="tabpage" id="page-admin" role="tabpanel" aria-labelledby="tab-admin">
+    <div class="card">
+      <h2>Restroom review queue</h2>
+      <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Spots hidden from the public list after 3 or more reports. Approve to restore them, or remove them permanently.</div>
+      <div id="adminQueueList"></div>
+    </div>
+  </div>
+
   <div class="foot-note">Personal tracking only — not a diagnosis or medical advice. Worth bringing this log to your GI appointments.</div>
   <div class="legal-footer"><a href="terms.html" target="_blank">Terms & Conditions</a>·<a href="privacy.html" target="_blank">Privacy Policy</a></div>
 </div>
@@ -355,6 +371,7 @@
 <script src="js/food.js"></script>
 <script src="js/tabs.js"></script>
 <script src="js/restrooms.js"></script>
+<script src="js/admin.js"></script>
 <script src="js/trends.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/dashboard.js"></script>

@@ -10,6 +10,19 @@
    Seed data is read from window.__seedTables, set via page.addInitScript
    in tests/fixtures/helpers.js before this script runs. */
 (function () {
+  const CURRENT_USER_ID = 'test-user';
+  const REPORT_HIDE_THRESHOLD = 3;
+
+  // Mirrors the real trigger (public.recompute_restroom_report_state): keeps
+  // restrooms.report_count/hidden in sync with restroom_reports rows.
+  function recomputeRestroomReportState(tables, restroomId) {
+    const restroom = (tables.restrooms || []).find((r) => r.id === restroomId);
+    if (!restroom) return;
+    const count = (tables.restroom_reports || []).filter((r) => r.restroom_id === restroomId).length;
+    restroom.report_count = count;
+    if (count >= REPORT_HIDE_THRESHOLD) restroom.hidden = true;
+  }
+
   function makeFakeSupabase(tables) {
     function query(tableName) {
       const state = { filters: [], orders: [], rangeVal: null, limitVal: null, countOpt: null, singleMode: null };
@@ -23,6 +36,7 @@
           else if (f.op === 'lte') out = out.filter((r) => r[f.col] != null && r[f.col] <= f.val);
           else if (f.op === 'lt') out = out.filter((r) => r[f.col] != null && r[f.col] < f.val);
           else if (f.op === 'not_is_null') out = out.filter((r) => r[f.col] != null);
+          else if (f.op === 'in') out = out.filter((r) => f.vals.includes(r[f.col]));
           else if (f.op === 'or_ilike') {
             const term = f.term.toLowerCase();
             out = out.filter((r) => f.cols.some((c) => (r[c] || '').toLowerCase().includes(term)));
@@ -53,6 +67,7 @@
         lte(col, val) { state.filters.push({ op: 'lte', col, val }); return builder; },
         lt(col, val) { state.filters.push({ op: 'lt', col, val }); return builder; },
         not(col, kind, val) { if (kind === 'is' && val === null) state.filters.push({ op: 'not_is_null', col }); return builder; },
+        in(col, vals) { state.filters.push({ op: 'in', col, vals }); return builder; },
         or(expr) {
           const parts = expr.split(',');
           const cols = parts.map((p) => p.split('.')[0]);
@@ -77,15 +92,32 @@
 
       function execute() {
         if (state.insertRow) {
-          const row = { id: Math.floor(Math.random() * 1e9), ...state.insertRow };
+          // Mirrors columns that default to auth.uid() server-side - the app
+          // never sets user_id itself on these tables, same as real Postgres.
+          const row = { id: Math.floor(Math.random() * 1e9), user_id: CURRENT_USER_ID, ...state.insertRow };
+          if (tableName === 'restroom_reports') {
+            const dup = (tables.restroom_reports || []).some(
+              (r) => r.restroom_id === row.restroom_id && r.user_id === row.user_id
+            );
+            if (dup) return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint' } };
+          }
           tables[tableName] = tables[tableName] || [];
           tables[tableName].push(row);
+          if (tableName === 'restroom_reports') recomputeRestroomReportState(tables, row.restroom_id);
           return { data: state.singleMode ? row : [row], error: null };
         }
         if (state.deleteMode) {
           const before = rows();
           const toDelete = applyFilters(before);
           tables[tableName] = before.filter((r) => !toDelete.includes(r));
+          if (tableName === 'restroom_reports') {
+            const affected = [...new Set(toDelete.map((r) => r.restroom_id))];
+            affected.forEach((id) => recomputeRestroomReportState(tables, id));
+          }
+          if (tableName === 'restrooms') {
+            const deletedIds = toDelete.map((r) => r.id);
+            tables.restroom_reports = (tables.restroom_reports || []).filter((r) => !deletedIds.includes(r.restroom_id));
+          }
           return { data: null, error: null };
         }
         if (state.updatePatch) {

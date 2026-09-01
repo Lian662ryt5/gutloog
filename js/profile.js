@@ -67,6 +67,9 @@ function renderProfile(){
   const nameEl = document.getElementById('profileUsernameDisplay');
   if(nameEl) nameEl.textContent = currentUsername || 'Set a username';
 
+  const accountIdEl = document.getElementById('accountIdValue');
+  if(accountIdEl) accountIdEl.textContent = currentUserId || '—';
+
   const joinEl = document.getElementById('profileJoinDate');
   if(joinEl){
     joinEl.textContent = profileCreatedAt
@@ -185,5 +188,19 @@ function bindProfileEvents(){
   });
 
   viewBadgesBtn.addEventListener('click', ()=> switchTab('achievements'));
+
+  const copyAccountIdBtn = document.getElementById('copyAccountIdBtn');
+  if(copyAccountIdBtn){
+    copyAccountIdBtn.addEventListener('click', async ()=>{
+      if(!currentUserId) return;
+      try{
+        await navigator.clipboard.writeText(currentUserId);
+        copyAccountIdBtn.textContent = 'Copied';
+      }catch(e){
+        copyAccountIdBtn.textContent = 'Could not copy';
+      }
+      setTimeout(()=>{ copyAccountIdBtn.textContent = 'Copy'; }, 2000);
+    });
+  }
 }
 
