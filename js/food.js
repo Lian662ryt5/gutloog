@@ -304,10 +304,9 @@ function renderStats(){
   `;
 }
 
+const ESCAPE_HTML_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
 function escapeHtml(s){
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  return String(s).replace(/[&<>"']/g, c => ESCAPE_HTML_MAP[c]);
 }
 
 function renderHomeStats(){
