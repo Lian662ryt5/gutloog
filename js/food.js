@@ -73,7 +73,7 @@ function renderFoodPreview(){
   if(!pendingFood){ foodPreview.classList.remove('show'); return; }
   const notFound = !pendingFood.name;
   foodPreview.innerHTML = `
-    ${pendingFood.image ? `<img src="${pendingFood.image}" alt="">` : `<div class="food-icon">🍽️</div>`}
+    ${pendingFood.image ? `<img src="${pendingFood.image}" alt="" decoding="async">` : `<div class="food-icon">🍽️</div>`}
     <div class="fp-body">
       ${notFound
         ? `<input type="text" id="fpNameFix" placeholder="Product not found — type its name" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:16px;">`
@@ -250,7 +250,7 @@ function render(){
     const delBtn = e.pendingSync ? '' : `<button class="del-btn" data-id="${e.id}" aria-label="Delete entry">×</button>`;
     if(e.kind === 'food'){
       html += `<div class="log-entry">
-        ${e.foodImage ? `<div class="food-icon"><img src="${e.foodImage}" alt=""></div>` : `<div class="food-icon">🍽️</div>`}
+        ${e.foodImage ? `<div class="food-icon"><img src="${e.foodImage}" alt="" loading="lazy" decoding="async"></div>` : `<div class="food-icon">🍽️</div>`}
         <div class="log-body">
           <div class="log-meta"><span>${escapeHtml(e.foodName)} · ${time}</span>${delBtn}</div>
           <div class="log-tags">${e.foodBrand ? `<span class="tag">${escapeHtml(e.foodBrand)}</span>` : ''}<span class="tag">Food</span>${pendingTag}</div>
