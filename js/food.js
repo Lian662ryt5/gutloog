@@ -200,6 +200,7 @@ async function saveFoodEntry(f){
     entries.unshift(rowToEntry(data));
     clearAttachedFoodPhoto();
     savedOnline = true;
+    showToast('Food entry saved.');
   }catch(e){
     if(isNetworkError(e)){
       const localId = await queueOfflineEntry(row);

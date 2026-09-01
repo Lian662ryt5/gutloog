@@ -46,7 +46,7 @@ function renderAdminQueue(){
   }
   list.innerHTML = adminQueue.map(r=>{
     const reportsHtml = r.reports.map(rep=>
-      `<div class="areport">${escapeHtml(REPORT_REASON_LABELS[rep.reason] || rep.reason)}${rep.note ? ` — ${escapeHtml(rep.note)}` : ''} <span style="opacity:.7;">(${formatReportDate(rep.created_at)})</span></div>`
+      `<div class="areport">${escapeHtml(REPORT_REASON_LABELS[rep.reason] || rep.reason)}${rep.note ? ` — ${escapeHtml(rep.note)}` : ''} <span>(${formatReportDate(rep.created_at)})</span></div>`
     ).join('');
     return `<div class="admin-card" data-admin-id="${r.id}">
       <div class="rname">${escapeHtml(r.name)}</div>

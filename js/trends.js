@@ -58,14 +58,25 @@ function renderTrends(){
   const bars = counts.map((c,i)=>{
     const h = Math.round((c.total/max)*CHART_H);
     const fh = Math.round((c.flagged/max)*CHART_H);
-    return `<div class="trend-bar-col">
+    // The flagged portion of a bar is never distinguished by color alone:
+    // it also gets a "▲" glyph above the bar and a plain-text summary via
+    // aria-label/role="img", so colorblind and screen-reader users get the
+    // same information sighted users get from the red-vs-teal color cue.
+    const dateLabel = days[i].toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+    const summary = `${dateLabel}: ${c.total} ${c.total===1?'entry':'entries'}${c.flagged ? `, ${c.flagged} flagged` : ''}`;
+    return `<div class="trend-bar-col" role="img" aria-label="${escapeHtml(summary)}">
+      <span class="trend-flag-mark" aria-hidden="true">${c.flagged ? '▲' : ''}</span>
       <div class="trend-bar" style="height:${h}px;position:relative;">
         ${c.flagged ? `<div class="trend-bar flag" style="height:${fh}px;position:absolute;bottom:0;width:100%;"></div>` : ''}
       </div>
     </div>`;
   }).join('');
   const labels = days.map((d,i)=> (i % showEvery === 0) ? `<span>${d.toLocaleDateString(undefined,{month:'numeric',day:'numeric'})}</span>` : '<span></span>').join('');
-  chart.innerHTML = `<div class="trend-bars">${bars}</div><div class="trend-labels">${labels}</div>`;
+  chart.innerHTML = `<div class="trend-bars" role="group" aria-label="Daily entries, last ${trendRange} days">${bars}</div><div class="trend-labels">${labels}</div>
+    <div class="trend-legend">
+      <span class="tl-item"><span class="tl-swatch total" aria-hidden="true"></span>Entries logged</span>
+      <span class="tl-item"><span class="tl-swatch flag" aria-hidden="true">▲</span>Includes a flagged symptom (blood, urgency, or high pain)</span>
+    </div>`;
 
   const byLoc = document.getElementById('trendByLocation');
   renderFoodCorrelation();
