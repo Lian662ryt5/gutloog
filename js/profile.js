@@ -2,13 +2,20 @@
 const RING_RADIUS = 52;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-function currentStreak(entriesList){
+// Shared by currentStreak() below and longestStreak() in achievements.js -
+// both take a plain array of stool-entry ts strings (already kind-filtered
+// server-side by whoever fetched them), not full entry objects.
+function localDaySet(tsList){
   const days = new Set();
-  entriesList.forEach(e=>{
-    if(e.kind !== 'stool') return;
-    const d = new Date(e.ts); d.setHours(0,0,0,0);
+  tsList.forEach(ts=>{
+    const d = new Date(ts); d.setHours(0,0,0,0);
     days.add(d.getTime());
   });
+  return days;
+}
+
+function currentStreak(tsList){
+  const days = localDaySet(tsList);
   const today = new Date(); today.setHours(0,0,0,0);
   let cursor = today.getTime();
   if(!days.has(cursor)){
@@ -90,11 +97,10 @@ function renderProfile(){
 
   const statsGrid = document.getElementById('profileStatsGrid');
   if(statsGrid){
-    const foodCount = entries.filter(e=>e.kind==='food').length;
     const items = [
-      { n: currentStreak(entries), l: 'Day Streak' },
+      { n: currentStreak(streakTimestamps), l: 'Day Streak' },
       { n: stats.entriesCount, l: 'Total Entries' },
-      { n: foodCount, l: 'Foods Logged' },
+      { n: totalFoodCount, l: 'Foods Logged' },
       { n: stats.restroomsOwned, l: 'Restroom Spots' }
     ];
     statsGrid.innerHTML = items.map(i=>`<div class="profile-stat"><div class="ps-n">${i.n}</div><div class="ps-l">${escapeHtml(i.l)}</div></div>`).join('');

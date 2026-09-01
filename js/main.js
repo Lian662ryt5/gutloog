@@ -7,10 +7,12 @@ function init(){
   renderProfile();
   bindProfileEvents();
   renderTrends();
-  loadEntries();      // also triggers renderTrends()/renderHomeStats() again once data arrives
+  renderDashboard();  // initial paint; re-rendered once entries/reminders actually load
+  loadEntries();      // also loads account stats + trends data, re-rendering everything once each arrives
   loadRestrooms();
   loadProfileTier();
   loadReminderSettings();
   handleReminderUrlParams();
+  showOnboardingIfNeeded(); // no-op if consent isn't accepted yet, or already onboarded
 }
 init();

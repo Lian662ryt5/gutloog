@@ -27,6 +27,19 @@
     <button class="save-btn" id="consentContinueBtn" disabled>Continue</button>
   </div>
 </div>
+<div class="onboarding-gate hidden" id="onboardingGate">
+  <div class="onboarding-card">
+    <button class="onboarding-skip" id="onboardingSkipBtn" type="button">Skip</button>
+    <div class="onboarding-icon" id="onboardingIcon" aria-hidden="true"></div>
+    <h2 id="onboardingTitle"></h2>
+    <p id="onboardingBody"></p>
+    <div class="onboarding-dots" id="onboardingDots" role="progressbar" aria-label="Onboarding progress"></div>
+    <div class="onboarding-actions">
+      <button class="loc-btn" id="onboardingBackBtn" type="button">Back</button>
+      <button class="save-btn" id="onboardingNextBtn" type="button" style="margin-top:0;">Next</button>
+    </div>
+  </div>
+</div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -36,23 +49,28 @@
     <button class="export-btn" id="exportBtn" aria-label="Export log data as CSV">Export</button>
   </header>
 
-  <div class="tabbar">
-    <button class="tabbtn active" data-tab="home">Home</button>
-    <button class="tabbtn" data-tab="log">Log</button>
-    <button class="tabbtn" data-tab="restrooms">Restrooms</button>
-    <button class="tabbtn" data-tab="trends">Trends</button>
-    <button class="tabbtn" data-tab="themes">Themes</button>
-    <button class="tabbtn" data-tab="achievements">Badges</button>
-    <button class="tabbtn" data-tab="profile">Profile</button>
+  <div class="tabbar" role="tablist" aria-label="Sections">
+    <button class="tabbtn active" id="tab-home" data-tab="home" role="tab" aria-selected="true" aria-controls="page-home">Home</button>
+    <button class="tabbtn" id="tab-log" data-tab="log" role="tab" aria-selected="false" aria-controls="page-log">Log</button>
+    <button class="tabbtn" id="tab-restrooms" data-tab="restrooms" role="tab" aria-selected="false" aria-controls="page-restrooms">Restrooms</button>
+    <button class="tabbtn" id="tab-trends" data-tab="trends" role="tab" aria-selected="false" aria-controls="page-trends">Trends</button>
+    <button class="tabbtn" id="tab-themes" data-tab="themes" role="tab" aria-selected="false" aria-controls="page-themes">Themes</button>
+    <button class="tabbtn" id="tab-achievements" data-tab="achievements" role="tab" aria-selected="false" aria-controls="page-achievements">Badges</button>
+    <button class="tabbtn" id="tab-profile" data-tab="profile" role="tab" aria-selected="false" aria-controls="page-profile">Profile</button>
   </div>
 
-  <div class="tabpage active" id="page-home">
+  <div class="tabpage active" id="page-home" role="tabpanel" aria-labelledby="tab-home">
     <div class="card" id="pricingCard">
       <h2>Go Premium <span class="plan-badge free" id="planBadge">Free</span></h2>
       <div id="checkoutBannerSlot"></div>
       <div class="pricing-grid" id="pricingGrid"></div>
       <div class="foot-note" style="margin-top:8px;padding:0;text-align:left;">Cancel anytime. Payments handled securely by Stripe.</div>
       <div class="plan-legal">By subscribing, you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Monthly/Annual renew automatically until cancelled.</div>
+    </div>
+
+    <div class="card" id="todayCard">
+      <h2 id="dashGreeting">Today</h2>
+      <div id="todaySummary"></div>
     </div>
 
     <div id="emailBannerSlot"></div>
@@ -73,12 +91,35 @@
             <div class="cdesc">Find one nearby, or check your saved list of clean, trusted spots.</div>
           </div>
         </div>
+        <div class="choice-card" data-goto="log" role="button" tabindex="0" aria-label="Log food">
+          <div class="choice-icon" style="font-size:26px;">🍽️</div>
+          <div class="choice-text">
+            <div class="ctitle">Log food</div>
+            <div class="cdesc">Scan a barcode or add a meal manually.</div>
+          </div>
+        </div>
+        <div class="choice-card" data-goto="profile" role="button" tabindex="0" aria-label="Manage reminders">
+          <div class="choice-icon" style="font-size:26px;">🔔</div>
+          <div class="choice-text">
+            <div class="ctitle">Reminders</div>
+            <div class="cdesc">Set up or check your logging reminders.</div>
+          </div>
+        </div>
       </div>
-      <div class="home-stats" id="homeStats"></div>
+    </div>
+
+    <div class="card" id="remindersSnapshotCard">
+      <h2>Reminders</h2>
+      <div id="remindersSnapshot"></div>
+    </div>
+
+    <div class="card" id="insightsCard">
+      <h2>Insights</h2>
+      <div id="insightsList"></div>
     </div>
   </div>
 
-  <div class="tabpage" id="page-log">
+  <div class="tabpage" id="page-log" role="tabpanel" aria-labelledby="tab-log">
   <div class="stats-strip" id="statsStrip"></div>
 
   <div class="card">
@@ -134,13 +175,19 @@
 
   <div class="card">
     <h2>History</h2>
+    <div class="filter-row">
+      <input type="date" id="entriesFromInput" aria-label="From date">
+      <input type="date" id="entriesToInput" aria-label="To date">
+      <button class="loc-btn" type="button" id="entriesFilterBtn">Filter</button>
+      <button class="loc-btn" type="button" id="entriesFilterClearBtn" hidden>Clear</button>
+    </div>
     <div id="logList"><div class="empty">Loading…</div></div>
   </div>
 
   <div class="foot-note">Personal tracking only — not a diagnosis or medical advice. Worth bringing this log to your GI appointments. If you notice heavy bleeding, severe pain, fever, or you're feeling unwell, contact a doctor.</div>
   </div>
 
-  <div class="tabpage" id="page-restrooms">
+  <div class="tabpage" id="page-restrooms" role="tabpanel" aria-labelledby="tab-restrooms">
     <div class="card">
       <h2>Find one nearby</h2>
       <button class="find-btn" id="findNearbyBtn">
@@ -191,7 +238,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-trends">
+  <div class="tabpage" id="page-trends" role="tabpanel" aria-labelledby="tab-trends">
     <div class="card">
       <h2>Trends</h2>
       <div class="trend-tabs">
@@ -216,7 +263,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-themes">
+  <div class="tabpage" id="page-themes" role="tabpanel" aria-labelledby="tab-themes">
     <div class="card">
       <h2>Premium Themes</h2>
       <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Preview any theme free — <span style="color:var(--teal-deep);font-weight:600;">Premium members</span> can save one to keep it every time they open the app.</div>
@@ -225,7 +272,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-achievements">
+  <div class="tabpage" id="page-achievements" role="tabpanel" aria-labelledby="tab-achievements">
     <div class="card">
       <h2>Badges</h2>
       <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Earned automatically as you use the app — nothing to claim.</div>
@@ -233,7 +280,7 @@
     </div>
   </div>
 
-  <div class="tabpage" id="page-profile">
+  <div class="tabpage" id="page-profile" role="tabpanel" aria-labelledby="tab-profile">
     <div class="card profile-header-card">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar" id="profileAvatar"><span id="profileAvatarInitial">?</span></div>
@@ -310,6 +357,8 @@
 <script src="js/restrooms.js"></script>
 <script src="js/trends.js"></script>
 <script src="js/reminders.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/onboarding.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

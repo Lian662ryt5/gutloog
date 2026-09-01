@@ -26,13 +26,17 @@ function openOfflineDB(){
 async function queueOfflineEntry(row){
   try{
     const db = await openOfflineDB();
-    return await new Promise((resolve, reject)=>{
+    const localId = await new Promise((resolve, reject)=>{
       const tx = db.transaction(OFFLINE_STORE, 'readwrite');
       const store = tx.objectStore(OFFLINE_STORE);
       const req = store.add({ row, queuedAt: new Date().toISOString() });
       req.onsuccess = ()=> resolve(req.result);
       req.onerror = ()=> reject(req.error);
     });
+    // Covers the flaky-connection case where 'online' never cleanly fires -
+    // starts the fallback poll now rather than waiting for the next page load.
+    ensureSyncIntervalRunning();
+    return localId;
   }catch(e){ console.error('queueOfflineEntry failed', e); return null; }
 }
 
@@ -86,12 +90,29 @@ function showToast(text){
 }
 
 let syncInFlight = false;
+let syncIntervalId = null;
+
+// The 'online' event covers the common case for free (zero cost while
+// idle). This interval is only a fallback for flaky connections that never
+// cleanly fire 'online' - so it only runs while something is actually
+// queued, instead of polling forever on every open tab.
+function ensureSyncIntervalRunning(){
+  if(syncIntervalId !== null) return;
+  syncIntervalId = setInterval(syncOfflineQueue, 30000);
+}
+function stopSyncIntervalIfIdle(){
+  if(syncIntervalId === null) return;
+  clearInterval(syncIntervalId);
+  syncIntervalId = null;
+}
+
 async function syncOfflineQueue(){
   if(syncInFlight || !navigator.onLine) return;
   syncInFlight = true;
   try{
     const queued = await getQueuedEntries();
-    if(!queued.length) return;
+    if(!queued.length){ stopSyncIntervalIfIdle(); return; }
+    ensureSyncIntervalRunning();
     let syncedCount = 0;
     for(const item of queued){
       try{
@@ -109,12 +130,18 @@ async function syncOfflineQueue(){
     if(syncedCount){
       showToast(`Synced ${syncedCount} offline ${syncedCount===1?'entry':'entries'}.`);
       render();
+      loadAccountStats();
+      loadTrendsData();
     }
+    const remaining = await getQueuedEntries();
+    if(!remaining.length) stopSyncIntervalIfIdle();
   } finally {
     syncInFlight = false;
   }
 }
 
 window.addEventListener('online', syncOfflineQueue);
-setInterval(syncOfflineQueue, 30000);
+// Cheap one-off check at load: if a previous offline session left entries
+// queued, start the fallback interval; otherwise it stays off entirely.
+getQueuedEntries().then(q => { if(q.length) ensureSyncIntervalRunning(); });
 

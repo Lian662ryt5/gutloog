@@ -34,7 +34,7 @@
 <div class="wrap">
   <a class="back" href="index.html">&larr; Back to Gut Log</a>
   <h1>Privacy Policy</h1>
-  <div class="updated">Last updated: 25 August 2026</div>
+  <div class="updated">Last updated: 1 September 2026</div>
 
   <div class="card">
     <h2>1. Who this policy covers</h2>
@@ -50,6 +50,7 @@
     <p><strong>Restroom submissions.</strong> Names, locations/addresses, cleanliness ratings, notes, and photos you submit for restroom spots. <strong>These are visible to every user of the app</strong> — see Section 3.</p>
     <p><strong>Location data.</strong> If you tap "Use my location" or "Find nearby," your device's GPS coordinates are requested with your browser's explicit permission. Coordinates you attach to a saved restroom are stored and shown to other users; a one-off "find nearby" search is not stored by us at all (it opens Google Maps directly).</p>
     <p><strong>Billing data.</strong> If you subscribe to a premium plan, payment is handled entirely by Stripe — we never see or store your card details. We store only your subscription tier (e.g. "monthly," "annual," "lifetime"), Stripe customer ID, and Stripe subscription ID, so we can recognise your paid status.</p>
+    <p><strong>Reminder notifications (optional).</strong> If you turn on reminders, we store which reminder types you've enabled, the times you've set, any custom message text you write, and your device's time zone, so reminders arrive at the right local time. If you tap "Enable notifications," your browser also creates a push subscription (an endpoint URL and encryption keys, not readable as personal data on their own) that we store so we can deliver the notification — this doesn't happen unless you explicitly enable it, and turning reminders off removes it.</p>
     <p><strong>Technical data.</strong> Standard web request logs (IP address, browser type, timestamps) may be retained briefly by our hosting and database providers for security and debugging.</p>
   </div>
 
@@ -67,6 +68,7 @@
       <li><strong>Stripe</strong> — payment processing for premium subscriptions. Stripe's own privacy policy governs the payment details you enter directly with them.</li>
       <li><strong>Open Food Facts</strong> — an open food database we query using the barcode you scan, to fetch product names. The barcode is sent to their public API; no other personal data is sent.</li>
       <li><strong>Google Maps</strong> — used only when you tap "Open nearby restrooms in Maps," which opens Google Maps directly in your browser with your current coordinates in the URL. This happens outside the app; Google's own privacy policy applies to that search.</li>
+      <li><strong>Your browser's push service</strong> (e.g. Google's FCM for Chrome, Mozilla's push service for Firefox) — if you enable reminders, the notification text is relayed through this service to your device, the same way it works for any website's push notifications. It only sees what's needed to deliver the notification.</li>
     </ul>
     <p>We may also disclose information if required by law, or to protect the safety of our users.</p>
   </div>
@@ -100,7 +102,7 @@
   <div class="card">
     <h2>8. International transfers, cookies & children</h2>
     <p><strong>International transfers.</strong> Our primary hosting is UK-based. Some processors above (e.g. Stripe) may process data outside the UK/EU under standard contractual safeguards.</p>
-    <p><strong>Cookies.</strong> The app itself does not use tracking or advertising cookies. It uses browser local storage only to remember your consent choice and login session.</p>
+    <p><strong>Cookies.</strong> The app itself does not use tracking or advertising cookies. It uses browser local storage to remember your consent choice, your sign-in session, and a few small non-personal flags (like which badges you've already seen and whether you've completed the app's intro) so they don't repeat unnecessarily. We also use a service worker to cache the app's own files for faster loading and offline use — see Section 5 for how long we keep data, and note the service worker never caches your entries or other account data, only the app's static files.</p>
     <p><strong>Children.</strong> Gut Log is not directed at children under 16. We don't knowingly collect data from children under 16; if you believe a child has used the app, please contact us so we can delete the data.</p>
   </div>
 

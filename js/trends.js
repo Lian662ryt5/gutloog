@@ -1,5 +1,16 @@
-/* ---- Trends ---- */
+/* ---- Trends ----
+   Fetches its own bounded 180-day window (trendsStoolEntries/trendsFoodEntries)
+   rather than relying on the paginated in-memory `entries` array, which may
+   hold far less than that. 180 days comfortably covers the largest
+   selectable chart range (90 days) with headroom for the food-correlation
+   and by-location views, which benefit from a bit more history than the
+   visible chart. Switching between 14/30/90 days just re-slices this
+   already-fetched set client-side - no new network call needed. */
 let trendRange = 14;
+const TRENDS_LOOKBACK_DAYS = 180;
+let trendsStoolEntries = [];
+let trendsFoodEntries = [];
+
 document.querySelectorAll('.trend-tabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.trend-tabs button').forEach(b=>b.classList.remove('active'));
@@ -8,6 +19,22 @@ document.querySelectorAll('.trend-tabs button').forEach(btn=>{
     renderTrends();
   });
 });
+
+async function loadTrendsData(){
+  await ensureAuth();
+  const since = new Date(); since.setDate(since.getDate() - TRENDS_LOOKBACK_DAYS); since.setHours(0,0,0,0);
+  try{
+    const [stoolRes, foodRes] = await Promise.all([
+      sb.from('entries').select('*').eq('kind','stool').gte('ts', since.toISOString()).order('ts',{ascending:false}),
+      sb.from('entries').select('*').eq('kind','food').gte('ts', since.toISOString()).order('ts',{ascending:false}),
+    ]);
+    if(stoolRes.error) throw stoolRes.error;
+    if(foodRes.error) throw foodRes.error;
+    trendsStoolEntries = (stoolRes.data || []).map(rowToEntry);
+    trendsFoodEntries = (foodRes.data || []).map(rowToEntry);
+  }catch(e){ console.error('load trends data failed', e); }
+  renderTrends();
+}
 
 function renderTrends(){
   const chart = document.getElementById('trendChart');
@@ -18,8 +45,7 @@ function renderTrends(){
     days.push(d);
   }
   const counts = days.map(d=>{
-    const dayEntries = entries.filter(e=>{
-      if(e.kind !== 'stool') return false;
+    const dayEntries = trendsStoolEntries.filter(e=>{
       const ed = new Date(e.ts); ed.setHours(0,0,0,0);
       return ed.getTime() === d.getTime();
     });
@@ -43,7 +69,7 @@ function renderTrends(){
 
   const byLoc = document.getElementById('trendByLocation');
   renderFoodCorrelation();
-  const linked = entries.filter(e=>e.restId);
+  const linked = trendsStoolEntries.filter(e=>e.restId);
   if(!linked.length){
     byLoc.innerHTML = '<div class="empty">Link entries to a saved spot to see patterns here.</div>';
     return;
@@ -67,8 +93,8 @@ function renderTrends(){
 function renderFoodCorrelation(){
   const el = document.getElementById('foodCorrelation');
   if(!el) return;
-  const flares = entries.filter(e=> e.kind === 'stool' && (e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)));
-  const foods = entries.filter(e=> e.kind === 'food');
+  const flares = trendsStoolEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
+  const foods = trendsFoodEntries;
   if(!flares.length || !foods.length){
     el.innerHTML = '<div class="empty">Log some food and flagged symptoms to see patterns here.</div>';
     return;
@@ -126,12 +152,15 @@ function renderQuickRepeat(){
       rest_name: last.restName || null,
       note: ''
     };
+    let savedOnline = false;
     try{
       const { data, error } = await sb.from('entries').insert(row).select().single();
       if(error) throw error;
       entries.unshift(rowToEntry(data));
+      savedOnline = true;
     }catch(e){ console.error('quick repeat failed', e); alert('Could not save — check your connection.'); }
     render();
+    if(savedOnline){ loadAccountStats(); loadTrendsData(); }
   });
 }
 

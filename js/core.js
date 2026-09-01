@@ -13,6 +13,7 @@ consentContinueBtn.addEventListener('click', ()=>{
   if(!consentCheckbox.checked) return;
   localStorage.setItem(CONSENT_KEY, 'true');
   consentGate.classList.add('hidden');
+  if(typeof showOnboardingIfNeeded === 'function') showOnboardingIfNeeded();
 });
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
