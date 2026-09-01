@@ -55,6 +55,11 @@
       <div class="plan-legal">By subscribing, you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Monthly/Annual renew automatically until cancelled.</div>
     </div>
 
+    <div class="card" id="todayCard">
+      <h2 id="dashGreeting">Today</h2>
+      <div id="todaySummary"></div>
+    </div>
+
     <div id="emailBannerSlot"></div>
     <div class="card">
       <h2>What do you need right now?</h2>
@@ -73,8 +78,31 @@
             <div class="cdesc">Find one nearby, or check your saved list of clean, trusted spots.</div>
           </div>
         </div>
+        <div class="choice-card" data-goto="log" role="button" tabindex="0" aria-label="Log food">
+          <div class="choice-icon" style="font-size:26px;">🍽️</div>
+          <div class="choice-text">
+            <div class="ctitle">Log food</div>
+            <div class="cdesc">Scan a barcode or add a meal manually.</div>
+          </div>
+        </div>
+        <div class="choice-card" data-goto="profile" role="button" tabindex="0" aria-label="Manage reminders">
+          <div class="choice-icon" style="font-size:26px;">🔔</div>
+          <div class="choice-text">
+            <div class="ctitle">Reminders</div>
+            <div class="cdesc">Set up or check your logging reminders.</div>
+          </div>
+        </div>
       </div>
-      <div class="home-stats" id="homeStats"></div>
+    </div>
+
+    <div class="card" id="remindersSnapshotCard">
+      <h2>Reminders</h2>
+      <div id="remindersSnapshot"></div>
+    </div>
+
+    <div class="card" id="insightsCard">
+      <h2>Insights</h2>
+      <div id="insightsList"></div>
     </div>
   </div>
 
@@ -310,6 +338,7 @@
 <script src="js/restrooms.js"></script>
 <script src="js/trends.js"></script>
 <script src="js/reminders.js"></script>
+<script src="js/dashboard.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

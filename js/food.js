@@ -235,6 +235,7 @@ function render(){
   renderAchievements();
   renderProfile();
   if(typeof renderTrends === 'function') renderTrends();
+  if(typeof renderDashboard === 'function') renderDashboard();
   const list = document.getElementById('logList');
   if(!entries.length){
     list.innerHTML = '<div class="empty">No entries yet — log your first one above.</div>';

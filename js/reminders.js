@@ -38,6 +38,7 @@ async function loadReminderSettings(){
     reminderSettings = defaultReminderSettings();
   }
   renderReminders();
+  if(typeof renderDashboard === 'function') renderDashboard();
 }
 
 function renderReminders(){
@@ -175,6 +176,7 @@ async function saveReminderSettings(){
     reminderSettings.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     const { error } = await sb.from('reminder_settings').upsert({ user_id: user.id, ...reminderSettings }, { onConflict:'user_id' });
     if(error) throw error;
+    if(typeof renderDashboard === 'function') renderDashboard();
     showToast('Reminders saved.');
   }catch(e){
     console.error('save reminders failed', e);
