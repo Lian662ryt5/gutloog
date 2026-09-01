@@ -301,6 +301,7 @@ function renderRestrooms(){
   }).join('');
   list.querySelectorAll('.del-btn').forEach(b=>{
     b.addEventListener('click', async ()=>{
+      if(!confirm('Delete this saved spot? This removes it for everyone and can\'t be undone.')) return;
       const id = +b.dataset.rid;
       b.disabled = true;
       try{

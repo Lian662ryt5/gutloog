@@ -285,6 +285,7 @@ function render(){
   list.innerHTML = html;
   list.querySelectorAll('.del-btn').forEach(b=>{
     b.addEventListener('click', async ()=>{
+      if(!confirm('Delete this entry? This can\'t be undone.')) return;
       const id = +b.dataset.id;
       b.disabled = true;
       try{
