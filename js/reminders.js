@@ -41,6 +41,17 @@ async function loadReminderSettings(){
   if(typeof renderDashboard === 'function') renderDashboard();
 }
 
+// iOS Safari only exposes the Push API to a PWA that's been added to the
+// Home Screen (iOS 16.4+) - a plain browser tab never gets PushManager at
+// all, which the generic "not supported" message below would otherwise
+// blame on the browser rather than explain how to actually fix it.
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function isStandalonePWA(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
 function renderReminders(){
   const statusSlot = document.getElementById('reminderStatusSlot');
   const typesSlot = document.getElementById('reminderTypesSlot');
@@ -49,7 +60,9 @@ function renderReminders(){
 
   const supported = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
   if(!supported){
-    statusSlot.innerHTML = `<div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Push reminders aren't supported in this browser.</div>`;
+    statusSlot.innerHTML = (isIOS() && !isStandalonePWA())
+      ? `<div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">On iPhone/iPad, reminders need Gut Log added to your Home Screen first: tap Share, then "Add to Home Screen," then open it from there.</div>`
+      : `<div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">Push reminders aren't supported in this browser.</div>`;
     typesSlot.innerHTML = '';
     saveBtn.style.display = 'none';
     return;

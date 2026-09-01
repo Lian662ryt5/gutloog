@@ -22,6 +22,34 @@ import webpush from "npm:web-push@3.6.7";
 
 const VAPID_PUBLIC_KEY = "BIyUGijZoChwoBuAVBMs2kvWmt9b3WK2q0F1-WrNgiMBhclSuJl8_x0Ic5JIVQz7rYVSjBg8oixF2TdNWc0B9_0";
 
+// Finds the UTC instant that corresponds to `${localDateStr}T00:00:00` in an
+// arbitrary IANA timezone, by iteratively converging with Intl.DateTimeFormat
+// rather than assuming the local day is exactly 24h - it isn't, on the two
+// DST-transition days a year in a zone that observes DST (23h or 25h), and a
+// fixed-offset subtraction gets the boundary wrong on exactly those days.
+function localDateStartInstantUTC(localDateStr: string, tz: string): Date {
+  let guess = new Date(`${localDateStr}T00:00:00Z`);
+  const target = guess.getTime();
+  for (let i = 0; i < 3; i++) {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz, hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
+    const p = Object.fromEntries(fmt.formatToParts(guess).map((x) => [x.type, x.value]));
+    const reportedAsUTC = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute), Number(p.second));
+    const diff = target - reportedAsUTC;
+    if (diff === 0) break;
+    guess = new Date(guess.getTime() + diff);
+  }
+  return guess;
+}
+
+function nextCalendarDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + 1));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
+}
+
 type ReminderType = "toilet" | "meals" | "symptoms" | "medication" | "water";
 
 const REMINDER_TYPE_META: Record<ReminderType, { entryKind: string; defaultMessage: string }> = {
@@ -120,19 +148,18 @@ Deno.serve(async (req) => {
       }
 
       // Skip if already logged today (this reminder type's local calendar
-      // day). Derive the UTC instant for the user's local midnight from the
-      // current instant minus minutes-elapsed-today - accurate enough for a
-      // reminder feature without needing a timezone-aware SQL helper.
+      // day) - the window is the user's actual local midnight-to-midnight,
+      // not a fixed 24h span, so it stays correct on DST-transition days too.
       const meta = REMINDER_TYPE_META[type];
-      const localMidnightUTC = new Date(now.getTime() - minutesOfDay * 60000);
-      const localMidnightPlus24hUTC = new Date(localMidnightUTC.getTime() + 24 * 3600000);
+      const dayStartUTC = localDateStartInstantUTC(localDate, tz);
+      const dayEndUTC = localDateStartInstantUTC(nextCalendarDate(localDate), tz);
       const { data: loggedRows, error: loggedErr } = await supabase
         .from("entries")
         .select("id")
         .eq("user_id", settings.user_id)
         .eq("kind", meta.entryKind)
-        .gte("ts", localMidnightUTC.toISOString())
-        .lt("ts", localMidnightPlus24hUTC.toISOString())
+        .gte("ts", dayStartUTC.toISOString())
+        .lt("ts", dayEndUTC.toISOString())
         .limit(1);
       if (loggedErr) console.error("logged-today check failed", loggedErr);
       if (loggedRows && loggedRows.length) { skipped++; continue; }
