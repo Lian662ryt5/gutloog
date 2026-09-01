@@ -21,13 +21,8 @@ const ACHIEVEMENTS = [
     check: s=> s.tier==='lifetime' }
 ];
 
-function longestStreak(entriesList){
-  const days = new Set();
-  entriesList.forEach(e=>{
-    if(e.kind !== 'stool') return;
-    const d = new Date(e.ts); d.setHours(0,0,0,0);
-    days.add(d.getTime());
-  });
+function longestStreak(tsList){
+  const days = localDaySet(tsList);
   const sorted = [...days].sort((a,b)=>a-b);
   let best = 0, run = 0, prev = null;
   sorted.forEach(t=>{
@@ -40,9 +35,9 @@ function longestStreak(entriesList){
 
 function computeAchievementStats(){
   return {
-    entriesCount: entries.length,
-    maxStreak: longestStreak(entries),
-    restroomsOwned: currentUserId ? restrooms.filter(r=>r.userId === currentUserId).length : 0,
+    entriesCount: totalEntriesCount,
+    maxStreak: longestStreak(streakTimestamps),
+    restroomsOwned: restroomsOwnedCount,
     visitedTrends: localStorage.getItem(VISITED_TRENDS_KEY) === 'true',
     tier: currentTier
   };

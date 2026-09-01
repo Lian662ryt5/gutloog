@@ -8,7 +8,7 @@ function init(){
   bindProfileEvents();
   renderTrends();
   renderDashboard();  // initial paint; re-rendered once entries/reminders actually load
-  loadEntries();      // also triggers renderTrends()/renderHomeStats() again once data arrives
+  loadEntries();      // also loads account stats + trends data, re-rendering everything once each arrives
   loadRestrooms();
   loadProfileTier();
   loadReminderSettings();

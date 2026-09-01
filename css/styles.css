@@ -642,11 +642,12 @@
     text-decoration:underline;cursor:pointer;padding:2px 0;
   }
   .rest-card .rfoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
-  .filter-row{display:flex;gap:8px;margin-bottom:12px;}
+  .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
   .filter-row select, .filter-row input{
-    flex:1;border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;
+    flex:1;min-width:120px;border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;
     font-size:16px;background:var(--paper);color:var(--ink);font-family:inherit;
   }
+  .filter-row button{flex:0 0 auto;}
   .rest-select{
     width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;
     font-family:inherit;font-size:16px;background:var(--paper);color:var(--ink);margin-bottom:10px;

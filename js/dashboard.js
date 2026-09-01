@@ -37,9 +37,9 @@ function renderTodayCard(){
   summaryEl.innerHTML = `
     <div class="dash-today-line">${line}</div>
     <div class="home-stats">
-      <div class="stat"><div class="n">${currentStreak(entries)}</div><div class="l">Day streak</div></div>
-      <div class="stat"><div class="n">${entries.length}</div><div class="l">Total logs</div></div>
-      <div class="stat"><div class="n">${restrooms.length}</div><div class="l">Saved spots</div></div>
+      <div class="stat"><div class="n">${currentStreak(streakTimestamps)}</div><div class="l">Day streak</div></div>
+      <div class="stat"><div class="n">${totalEntriesCount}</div><div class="l">Total logs</div></div>
+      <div class="stat"><div class="n">${totalRestroomsCount}</div><div class="l">Saved spots</div></div>
     </div>
   `;
 }
@@ -66,10 +66,12 @@ function renderRemindersSnapshot(){
   document.getElementById('dashSetupRemindersBtn').addEventListener('click', ()=> switchTab('profile'));
 }
 
+// Reuses the same 180-day window the Trends tab's own food-correlation card
+// fetches (trends.js) rather than the paginated `entries` array, which may
+// hold far less history than is needed for a meaningful correlation.
 function topFoodFlareCorrelation(){
-  const stoolEntries = entries.filter(e=>e.kind==='stool');
-  const flares = stoolEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
-  const foods = entries.filter(e=>e.kind==='food');
+  const flares = trendsStoolEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
+  const foods = trendsFoodEntries;
   if(!flares.length || !foods.length) return null;
 
   const WINDOW_MS = 48*3600*1000;
@@ -96,24 +98,21 @@ function renderInsights(){
   const el = document.getElementById('insightsList');
   if(!el) return;
 
-  const stoolEntries = entries.filter(e=>e.kind==='stool');
-  if(stoolEntries.length < 3){
+  if(streakTimestamps.length < 3){
     el.innerHTML = `<div class="empty">Log a few more entries to start seeing insights here.</div>`;
     return;
   }
 
   const lines = [];
 
-  const streak = currentStreak(entries);
+  const streak = currentStreak(streakTimestamps);
   if(streak >= 2) lines.push(`🔥 You're on a ${streak}-day logging streak.`);
 
-  const weekAgo = Date.now() - 7*86400000;
-  const thisWeek = stoolEntries.filter(e=> new Date(e.ts).getTime() > weekAgo);
-  if(thisWeek.length){
-    const thisWeekFlagged = thisWeek.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
+  if(weeklyStoolEntries.length){
+    const thisWeekFlagged = weeklyStoolEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
     lines.push(thisWeekFlagged.length
-      ? `📊 ${thisWeekFlagged.length} of ${thisWeek.length} entries this week were flagged (blood, urgency, or pain 2+).`
-      : `📊 No flagged entries this week, out of ${thisWeek.length} logged.`);
+      ? `📊 ${thisWeekFlagged.length} of ${weeklyStoolEntries.length} entries this week were flagged (blood, urgency, or pain 2+).`
+      : `📊 No flagged entries this week, out of ${weeklyStoolEntries.length} logged.`);
   }
 
   const topFood = topFoodFlareCorrelation();

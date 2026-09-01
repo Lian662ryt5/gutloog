@@ -4,6 +4,22 @@ let selectedClean = null;
 let selectedRestFlags = new Set();
 const REST_FLAG_LABELS = {private:'Private/lockable', paper:'Always stocked', code:'Code needed', customers:'Customers only', accessible:'Accessible'};
 
+const RESTROOMS_PAGE_SIZE = 20;
+let restroomsOffset = 0;
+let restroomsHasMore = true;
+let restroomsLoadingMore = false;
+let restroomsAreaFilter = '';
+let restroomsStarFilter = 0;
+let filterDebounceTimer = null;
+
+// Separate from the paginated/filtered `restrooms` list above, since these
+// need "all of them" (or a wide, capped view) regardless of what the user
+// is currently browsing: the "link this entry to a spot" dropdown, the
+// nearby-search haversine sort, and the ownership/total-count stats.
+let restroomLinkOptions = [];  // {id, name}, alphabetical, capped
+let restroomsOwnedCount = 0;   // true count of spots the current user saved
+let totalRestroomsCount = 0;   // true community-wide total
+
 const cleanScale = document.getElementById('cleanScale');
 cleanScale.setAttribute('role', 'group');
 cleanScale.setAttribute('aria-labelledby', 'cleanScaleLabel');
@@ -49,6 +65,18 @@ function haversineKm(lat1, lng1, lat2, lng2){
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// Restrooms are a shared, growing table - fetching all of them just to find
+// the nearest few would get slower for everyone over time. Bounded to spots
+// that actually have coordinates (the only ones relevant here), capped at a
+// generous 500 so this stays cheap regardless of total table size.
+async function fetchRestroomsWithCoords(){
+  try{
+    const { data, error } = await sb.from('restrooms').select('id,name,lat,lng').not('lat','is',null).limit(500);
+    if(error) throw error;
+    return (data||[]).filter(r=>r.lat!=null && r.lng!=null);
+  }catch(e){ console.error('fetch nearby-capable restrooms failed', e); return []; }
+}
+
 document.getElementById('findNearbyBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('findNearbyBtn');
   const label = document.getElementById('findNearbyLabel');
@@ -65,18 +93,18 @@ document.getElementById('findNearbyBtn').addEventListener('click', ()=>{
   status.textContent = '';
   label.innerHTML = '<span class="spinner"></span>Finding your location…';
   navigator.geolocation.getCurrentPosition(
-    pos=>{
+    async pos=>{
       const {latitude, longitude} = pos.coords;
       btn.disabled = false;
       label.textContent = 'Open nearby public restrooms in Maps';
       window.open(`https://www.google.com/maps/search/public+restroom/@${latitude},${longitude},16z`, '_blank');
-      const withCoords = restrooms.filter(r=>r.coords);
+      const withCoords = await fetchRestroomsWithCoords();
       if(!withCoords.length){
         nearbyList.innerHTML = '';
         return;
       }
       const sorted = withCoords
-        .map(r=>({...r, dist: haversineKm(latitude, longitude, r.coords.lat, r.coords.lng)}))
+        .map(r=>({...r, dist: haversineKm(latitude, longitude, r.lat, r.lng)}))
         .sort((a,b)=>a.dist-b.dist)
         .slice(0,5);
       nearbyList.innerHTML = '<div class="foot-note" style="margin:12px 0 0;padding:0;text-align:left;">Closest saved spots:</div>' +
@@ -189,14 +217,87 @@ function rowToRestroom(r){
   };
 }
 
+// PostgREST's .or() filter string uses , ( ) as syntax - strip them from
+// user-typed search text so a stray character can't break the filter
+// expression. Not a security boundary (still parameterized under the
+// hood), just keeps the search predictable.
+function sanitizeIlikeTerm(s){
+  return s.replace(/[,()%]/g, ' ').trim();
+}
+
 async function loadRestrooms(){
   await ensureAuth();
+  restrooms = [];
+  restroomsOffset = 0;
+  restroomsHasMore = true;
+  await Promise.all([loadMoreRestrooms(), loadRestroomLinkOptions(), loadRestroomCounts()]);
+}
+
+async function loadMoreRestrooms(){
+  if(restroomsLoadingMore || !restroomsHasMore) return;
+  restroomsLoadingMore = true;
+  const btn = document.getElementById('loadMoreRestroomsBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Loading…'; }
   try{
-    const { data, error } = await sb.from('restrooms').select('*').order('clean', {ascending:false});
+    let query = sb.from('restrooms').select('*')
+      .order('clean', {ascending:false})
+      .order('id', {ascending:false})
+      .range(restroomsOffset, restroomsOffset + RESTROOMS_PAGE_SIZE - 1);
+    if(restroomsAreaFilter) query = query.or(`name.ilike.%${restroomsAreaFilter}%,loc.ilike.%${restroomsAreaFilter}%`);
+    if(restroomsStarFilter) query = query.gte('clean', restroomsStarFilter);
+    const { data, error } = await query;
     if(error) throw error;
-    restrooms = (data||[]).map(rowToRestroom);
-  }catch(e){ console.error('load restrooms failed', e); restrooms = []; }
+    const rows = (data||[]).map(rowToRestroom);
+    restrooms = restrooms.concat(rows);
+    restroomsOffset += rows.length;
+    restroomsHasMore = rows.length === RESTROOMS_PAGE_SIZE;
+  }catch(e){
+    console.error('load restrooms failed', e);
+    alert('Could not load more spots — check your connection.');
+  } finally {
+    restroomsLoadingMore = false;
+  }
   renderRestrooms();
+}
+
+async function applyRestroomFilters(){
+  restroomsAreaFilter = sanitizeIlikeTerm((document.getElementById('filterArea')?.value || '').toLowerCase());
+  restroomsStarFilter = +(document.getElementById('filterStars')?.value || 0);
+  restrooms = [];
+  restroomsOffset = 0;
+  restroomsHasMore = true;
+  await loadMoreRestrooms();
+}
+
+// Alphabetical, id+name only, capped - for the "link this entry to a spot"
+// dropdown in the Log tab, which needs a broad selection regardless of
+// whatever filter/page the browsable list above is currently showing.
+async function loadRestroomLinkOptions(){
+  try{
+    const { data, error } = await sb.from('restrooms').select('id, name').order('name').limit(500);
+    if(error) throw error;
+    restroomLinkOptions = data || [];
+  }catch(e){ console.error('load restroom link options failed', e); restroomLinkOptions = []; }
+  populateRestLinkSelect();
+}
+
+async function loadRestroomCounts(){
+  await ensureAuth();
+  try{
+    const { data: { user } } = await sb.auth.getUser();
+    const [totalRes, ownedRes] = await Promise.all([
+      sb.from('restrooms').select('id', { count:'exact', head:true }),
+      user
+        ? sb.from('restrooms').select('id', { count:'exact', head:true }).eq('user_id', user.id)
+        : Promise.resolve({ count: 0, error: null }),
+    ]);
+    if(totalRes.error) throw totalRes.error;
+    if(ownedRes.error) throw ownedRes.error;
+    totalRestroomsCount = totalRes.count || 0;
+    restroomsOwnedCount = ownedRes.count || 0;
+  }catch(e){ console.error('load restroom counts failed', e); }
+  renderAchievements();
+  if(typeof renderDashboard === 'function') renderDashboard();
 }
 
 document.getElementById('saveRestBtn').addEventListener('click', async ()=>{
@@ -222,7 +323,22 @@ document.getElementById('saveRestBtn').addEventListener('click', async ()=>{
     };
     const { data, error } = await sb.from('restrooms').insert(row).select().single();
     if(error) throw error;
-    restrooms.unshift(rowToRestroom(data));
+    const saved = rowToRestroom(data);
+    // If a filter is active and the new spot wouldn't match it, the user
+    // would save a spot and then not see it - reset the filter instead so
+    // it's always visible right after saving (same pattern as entries).
+    const matchesFilter = (!restroomsAreaFilter || (saved.name+' '+(saved.loc||'')).toLowerCase().includes(restroomsAreaFilter))
+      && (saved.clean||0) >= restroomsStarFilter;
+    if(!matchesFilter){
+      restroomsAreaFilter = ''; restroomsStarFilter = 0;
+      const filterAreaEl = document.getElementById('filterArea');
+      const filterStarsEl = document.getElementById('filterStars');
+      if(filterAreaEl) filterAreaEl.value = '';
+      if(filterStarsEl) filterStarsEl.value = '0';
+    }
+    restrooms.unshift(saved);
+    loadRestroomLinkOptions();
+    loadRestroomCounts();
   }catch(e){
     console.error('SAVE RESTROOM ERROR:', e);
     alert(
@@ -254,33 +370,21 @@ function populateRestLinkSelect(){
   if(!sel) return;
   const current = sel.value;
   sel.innerHTML = '<option value="">Not linked to a saved spot</option>' +
-    restrooms.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+    restroomLinkOptions.map(r=>`<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
   sel.value = current;
 }
 
 function renderRestrooms(){
-  renderHomeStats();
-  populateRestLinkSelect();
   renderAchievements();
   renderProfile();
   const list = document.getElementById('restList');
   if(!restrooms.length){
-    list.innerHTML = '<div class="empty">No spots saved yet.</div>';
+    list.innerHTML = (restroomsAreaFilter || restroomsStarFilter)
+      ? '<div class="empty">No spots match that filter.</div>'
+      : '<div class="empty">No spots saved yet.</div>';
     return;
   }
-  const areaFilter = (document.getElementById('filterArea')?.value || '').toLowerCase();
-  const starFilter = +(document.getElementById('filterStars')?.value || 0);
-  let filtered = restrooms.filter(r=>{
-    const matchesArea = !areaFilter || (r.name+' '+(r.loc||'')).toLowerCase().includes(areaFilter);
-    const matchesStars = (r.clean||0) >= starFilter;
-    return matchesArea && matchesStars;
-  });
-  const sorted = filtered.sort((a,b)=> (b.clean||0) - (a.clean||0));
-  if(!sorted.length){
-    list.innerHTML = '<div class="empty">No spots match that filter.</div>';
-    return;
-  }
-  list.innerHTML = sorted.map(r=>{
+  let html = restrooms.map(r=>{
     const stars = '★'.repeat(r.clean||0) + '☆'.repeat(5-(r.clean||0));
     const tags = r.flags.map(f=>`<span class="tag">${REST_FLAG_LABELS[f]||f}</span>`).join('');
     const photo = r.photo ? `<img class="rphoto" src="${r.photo}" alt="Photo of ${escapeHtml(r.name)}" loading="lazy" decoding="async">` : '';
@@ -299,6 +403,14 @@ function renderRestrooms(){
       <div class="rfoot"><button class="report-btn" data-report="${r.id}">Report incorrect info</button></div>
     </div>`;
   }).join('');
+  if(restroomsHasMore){
+    html += `<button class="loc-btn" type="button" id="loadMoreRestroomsBtn" style="width:100%;margin-top:10px;">Load more</button>`;
+  } else if(restrooms.length >= RESTROOMS_PAGE_SIZE){
+    html += `<div class="foot-note" style="margin-top:10px;padding:0;">That's everything${(restroomsAreaFilter||restroomsStarFilter) ? ' matching this filter' : ''}.</div>`;
+  }
+  list.innerHTML = html;
+  const loadMoreBtn = document.getElementById('loadMoreRestroomsBtn');
+  if(loadMoreBtn) loadMoreBtn.addEventListener('click', loadMoreRestrooms);
   list.querySelectorAll('.del-btn').forEach(b=>{
     b.addEventListener('click', async ()=>{
       if(!confirm('Delete this saved spot? This removes it for everyone and can\'t be undone.')) return;
@@ -315,6 +427,8 @@ function renderRestrooms(){
       }
       restrooms = restrooms.filter(r=>r.id !== id);
       renderRestrooms();
+      loadRestroomLinkOptions();
+      loadRestroomCounts();
     });
   });
   list.querySelectorAll('[data-report]').forEach(b=>{
@@ -334,8 +448,8 @@ function renderRestrooms(){
   });
 }
 
-document.getElementById('filterArea').addEventListener('input', renderRestrooms);
-document.getElementById('filterStars').addEventListener('change', renderRestrooms);
-
-
-
+document.getElementById('filterArea').addEventListener('input', ()=>{
+  clearTimeout(filterDebounceTimer);
+  filterDebounceTimer = setTimeout(applyRestroomFilters, 400);
+});
+document.getElementById('filterStars').addEventListener('change', applyRestroomFilters);

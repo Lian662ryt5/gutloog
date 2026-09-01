@@ -192,12 +192,14 @@ async function saveFoodEntry(f){
     food_image: image,
     note: ''
   };
+  let savedOnline = false;
   try{
     if(!navigator.onLine) throw new Error('offline');
     const { data, error } = await sb.from('entries').insert(row).select().single();
     if(error) throw error;
     entries.unshift(rowToEntry(data));
     clearAttachedFoodPhoto();
+    savedOnline = true;
   }catch(e){
     if(isNetworkError(e)){
       const localId = await queueOfflineEntry(row);
@@ -214,6 +216,7 @@ async function saveFoodEntry(f){
     }
   }
   render();
+  if(savedOnline){ loadAccountStats(); loadTrendsData(); }
   return true;
 }
 
@@ -230,7 +233,6 @@ const TAG_LABELS = {blood:'Blood', mucus:'Mucus', urgent:'Urgency', incomplete:'
 
 function render(){
   renderStats();
-  renderHomeStats();
   renderQuickRepeat();
   renderAchievements();
   renderProfile();
@@ -238,7 +240,9 @@ function render(){
   if(typeof renderDashboard === 'function') renderDashboard();
   const list = document.getElementById('logList');
   if(!entries.length){
-    list.innerHTML = '<div class="empty">No entries yet — log your first one above.</div>';
+    list.innerHTML = entriesDateFilter
+      ? '<div class="empty">No entries in that date range.</div>'
+      : '<div class="empty">No entries yet — log your first one above.</div>';
     return;
   }
   let html = '';
@@ -283,7 +287,14 @@ function render(){
       </div>
     </div>`;
   });
+  if(entriesHasMore){
+    html += `<button class="loc-btn" type="button" id="loadMoreEntriesBtn" style="width:100%;margin-top:10px;">Load more</button>`;
+  } else if(entries.length >= ENTRIES_PAGE_SIZE){
+    html += `<div class="foot-note" style="margin-top:10px;padding:0;">That's everything${entriesDateFilter ? ' in this range' : ''}.</div>`;
+  }
   list.innerHTML = html;
+  const loadMoreBtn = document.getElementById('loadMoreEntriesBtn');
+  if(loadMoreBtn) loadMoreBtn.addEventListener('click', loadMoreEntries);
   list.querySelectorAll('.del-btn').forEach(b=>{
     b.addEventListener('click', async ()=>{
       if(!confirm('Delete this entry? This can\'t be undone.')) return;
@@ -300,19 +311,19 @@ function render(){
       }
       entries = entries.filter(e=>e.id !== id);
       render();
+      loadAccountStats();
+      loadTrendsData();
     });
   });
 }
 
 function renderStats(){
   const strip = document.getElementById('statsStrip');
-  const now = Date.now();
-  const weekAll = entries.filter(e=> now - new Date(e.ts).getTime() < 7*86400000);
-  const week = weekAll.filter(e=> e.kind === 'stool');
+  const week = weeklyStoolEntries;
   const flareCount = week.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)).length;
   const avgType = week.length ? (week.reduce((s,e)=>s+e.type,0)/week.length).toFixed(1) : '—';
   strip.innerHTML = `
-    <div class="stat"><div class="n">${weekAll.length}</div><div class="l">Past 7 days</div></div>
+    <div class="stat"><div class="n">${weeklyAllCount}</div><div class="l">Past 7 days</div></div>
     <div class="stat"><div class="n">${avgType}</div><div class="l">Avg type</div></div>
     <div class="stat"><div class="n">${flareCount}</div><div class="l">Flagged</div></div>
   `;
@@ -329,21 +340,4 @@ const KIND_META = {
   water:      { icon:'💧', label:'Water' }
 };
 
-function entrySummary(e){
-  if(e.kind === 'stool') return `Type ${e.type}`;
-  if(e.kind === 'food') return e.foodName;
-  return KIND_META[e.kind] ? KIND_META[e.kind].label : e.kind;
-}
-
-function renderHomeStats(){
-  const wrap = document.getElementById('homeStats');
-  if(!wrap) return;
-  const last = entries[0];
-  const lastTxt = last ? `${entrySummary(last)} · ${dayLabel(last.ts).toLowerCase()}` : 'No entries yet';
-  wrap.innerHTML = `
-    <div class="stat"><div class="n">${entries.length}</div><div class="l">Total logs</div></div>
-    <div class="stat"><div class="n">${restrooms.length}</div><div class="l">Saved spots</div></div>
-    <div class="stat"><div class="n" style="font-size:12px;">${lastTxt}</div><div class="l">Last entry</div></div>
-  `;
-}
 

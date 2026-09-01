@@ -130,6 +130,8 @@ async function syncOfflineQueue(){
     if(syncedCount){
       showToast(`Synced ${syncedCount} offline ${syncedCount===1?'entry':'entries'}.`);
       render();
+      loadAccountStats();
+      loadTrendsData();
     }
     const remaining = await getQueuedEntries();
     if(!remaining.length) stopSyncIntervalIfIdle();
