@@ -76,6 +76,8 @@ function showToast(text){
     host = document.createElement('div');
     host.id = 'toastHost';
     host.className = 'toast-host';
+    host.setAttribute('role', 'status');
+    host.setAttribute('aria-live', 'polite');
     document.body.appendChild(host);
   }
   const el = document.createElement('div');

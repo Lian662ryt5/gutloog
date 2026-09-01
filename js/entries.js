@@ -78,7 +78,7 @@ BRISTOL.forEach(b=>{
   grid.appendChild(el);
 });
 grid.setAttribute('role', 'group');
-grid.setAttribute('aria-label', 'Bristol Stool Scale');
+grid.setAttribute('aria-labelledby', 'bristolLabel');
 
 function selectType(n){
   selectedType = n;
@@ -279,6 +279,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     if(entriesDateFilter) resetEntriesDateFilterUI(); // so the new entry is visible, not hidden by a stale range
     entries.unshift(rowToEntry(data));
     savedOnline = true;
+    showToast(`Type ${row.type} entry saved.`);
   }catch(e){
     if(isNetworkError(e)){
       const localId = await queueOfflineEntry(row);

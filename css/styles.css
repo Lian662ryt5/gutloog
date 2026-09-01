@@ -154,6 +154,9 @@
     background:var(--paper);
     border-radius:20px;
     padding:7px 14px;
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
     font-size:13px;
     cursor:pointer;
     color:var(--ink-soft);
@@ -169,12 +172,24 @@
   }
   .scale-row{margin-top:14px;}
   .scale-row label{font-size:12px;color:var(--ink-soft);display:block;margin-bottom:6px;}
+  .section-label{
+    font-size:13px;font-weight:700;color:var(--ink);
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin:0 0 10px;
+  }
+  .opt-section-label{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
+  .req-badge, .opt-badge{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+    border-radius:20px;padding:2px 8px;
+  }
+  .req-badge{color:var(--brick);background:var(--brick-soft);border:1px solid var(--brick-soft);}
+  .opt-badge{color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);text-transform:none;letter-spacing:0;}
   .pain-dots{display:flex;gap:6px;}
   .pdot{
     appearance:none;-webkit-appearance:none;
     font:inherit;
     flex:1;
-    height:30px;
+    min-height:44px;
     border-radius:8px;
     border:1.5px solid var(--line);
     background:var(--paper);
@@ -428,7 +443,10 @@
   }
   .del-btn{
     background:none;border:none;color:var(--ink-soft);
-    font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;
+    font-size:16px;cursor:pointer;line-height:1;
+    min-width:32px;min-height:32px;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
   }
   .foot-note{
     font-size:11px;
@@ -506,7 +524,7 @@
     appearance:none;-webkit-appearance:none;
     font:inherit;
     flex:1;
-    height:32px;
+    min-height:44px;
     border-radius:8px;
     border:1.5px solid var(--line);
     background:var(--paper);
@@ -659,14 +677,22 @@
     border-radius:9px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;
   }
   .trend-tabs button.active{background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);}
-  .trend-bars{display:flex;align-items:flex-end;gap:4px;height:110px;margin-bottom:6px;}
+  .trend-bars{display:flex;align-items:flex-end;gap:4px;height:122px;margin-bottom:6px;}
   .trend-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .trend-flag-mark{display:block;height:13px;line-height:13px;font-size:11px;color:var(--brick);text-align:center;}
   .trend-bar{width:100%;background:var(--teal);border-radius:3px 3px 0 0;min-height:2px;}
   .trend-bar.flag{background:var(--brick);}
   .trend-labels{display:flex;gap:4px;}
   .trend-labels span{flex:1;text-align:center;font-size:9px;color:var(--ink-soft);}
-  .trend-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:11px;color:var(--ink-soft);}
-  .trend-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+  .trend-legend{display:flex;flex-direction:column;gap:4px;margin-top:10px;}
+  .tl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft);}
+  .tl-swatch{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:14px;height:14px;border-radius:3px;flex-shrink:0;
+    font-size:10px;color:#fff;
+  }
+  .tl-swatch.total{background:var(--teal);}
+  .tl-swatch.flag{background:var(--brick);}
   .consent-gate{
     position:fixed;inset:0;z-index:200;
     background:rgba(20,26,24,.75);
@@ -761,9 +787,15 @@
     text-align:center;
     transition:filter .3s ease, opacity .3s ease;
   }
-  .badge-card.locked{filter:grayscale(1);opacity:.45;}
-  .badge-card.unlocked{filter:none;opacity:1;}
-  .badge-icon{font-size:32px;line-height:1;margin-bottom:8px;}
+  /* Opacity used to fade the whole locked card, text included - dimmed
+     text composited over the background fails color-contrast (axe
+     color-contrast, WCAG 1.4.3) even though the underlying colors pass at
+     full strength. Grayscale + a dimmed icon alone is enough to read as
+     "locked" without touching text contrast. */
+  .badge-card.locked{filter:grayscale(1);}
+  .badge-card.locked .badge-icon{opacity:.4;}
+  .badge-card.unlocked{filter:none;}
+  .badge-icon{font-size:32px;line-height:1;margin-bottom:8px;opacity:1;transition:opacity .3s ease;}
   .badge-name{font-weight:700;font-size:13px;color:var(--teal-deep);}
   .badge-desc{font-size:11px;color:var(--ink-soft);margin-top:4px;line-height:1.4;}
   .badge-progress{
