@@ -9,6 +9,7 @@ let currentUserId = null;
 let currentUsername = null;
 let currentAvatarUrl = null;
 let profileCreatedAt = null;
+let currentIsAdmin = false;
 
 function renderPricing(){
   const grid = document.getElementById('pricingGrid');
@@ -43,13 +44,14 @@ async function loadProfileTier(){
     const { data: { user } } = await sb.auth.getUser();
     if(user){
       currentUserId = user.id;
-      const { data, error } = await sb.from('profiles').select('tier, theme, username, avatar_url, created_at').eq('id', user.id).maybeSingle();
+      const { data, error } = await sb.from('profiles').select('tier, theme, username, avatar_url, created_at, is_admin').eq('id', user.id).maybeSingle();
       if(!error && data){
         if(data.tier) currentTier = data.tier;
         if(currentTier !== 'free' && data.theme){ applyTheme(data.theme); }
         currentUsername = data.username || null;
         currentAvatarUrl = data.avatar_url || null;
         profileCreatedAt = data.created_at || null;
+        currentIsAdmin = !!data.is_admin;
       }
     }
   }catch(e){ console.error('load profile failed', e); }
@@ -57,6 +59,15 @@ async function loadProfileTier(){
   renderThemes();
   renderAchievements();
   renderProfile();
+  const adminTabBtn = document.getElementById('tab-admin');
+  if(adminTabBtn){
+    adminTabBtn.hidden = !currentIsAdmin;
+    if(currentIsAdmin && typeof loadAdminQueue === 'function') loadAdminQueue();
+  }
+  // currentUserId is only known once this resolves - restrooms.js uses it
+  // to hide the report button on the viewer's own spots, so re-render in
+  // case that list already painted first (load order isn't guaranteed).
+  if(typeof renderRestrooms === 'function') renderRestrooms();
 }
 
 async function startCheckout(plan, btn){

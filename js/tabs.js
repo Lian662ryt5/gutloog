@@ -16,6 +16,9 @@ function switchTab(name){
   if(name === 'profile'){
     renderProfile();
   }
+  if(name === 'admin' && typeof loadAdminQueue === 'function'){
+    loadAdminQueue();
+  }
 }
 document.querySelectorAll('.tabbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>switchTab(btn.dataset.tab));

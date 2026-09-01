@@ -213,9 +213,17 @@ function rowToRestroom(r){
     id: r.id, name: r.name, loc: r.loc, userId: r.user_id,
     coords: (r.lat!=null && r.lng!=null) ? {lat:r.lat, lng:r.lng} : null,
     photo: r.photo, clean: r.clean, flags: r.flags || [],
-    note: r.note, reportCount: r.report_count || 0
+    note: r.note, reportCount: r.report_count || 0, hidden: !!r.hidden
   };
 }
+
+const REPORT_REASON_LABELS = {
+  closed: 'Closed / no longer exists',
+  incorrect_info: 'Incorrect information',
+  inappropriate: 'Inappropriate content',
+  spam: 'Spam',
+  other: 'Other'
+};
 
 // PostgREST's .or() filter string uses , ( ) as syntax - strip them from
 // user-typed search text so a stray character can't break the filter
@@ -386,7 +394,9 @@ function renderRestrooms(){
   }
   let html = restrooms.map(r=>{
     const stars = '★'.repeat(r.clean||0) + '☆'.repeat(5-(r.clean||0));
-    const tags = r.flags.map(f=>`<span class="tag">${REST_FLAG_LABELS[f]||f}</span>`).join('');
+    const isOwnSpot = currentUserId && r.userId === currentUserId;
+    const tags = r.flags.map(f=>`<span class="tag">${REST_FLAG_LABELS[f]||f}</span>`).join('') +
+      (r.hidden ? `<span class="tag pending">🔎 ${isOwnSpot ? 'Pending review — only you can see this' : 'Pending review (hidden from public)'}</span>` : '');
     const photo = r.photo ? `<img class="rphoto" src="${r.photo}" alt="Photo of ${escapeHtml(r.name)}" loading="lazy" decoding="async">` : '';
     const mapLink = r.coords ? ` · <a href="https://www.google.com/maps?q=${r.coords.lat},${r.coords.lng}" target="_blank">map</a>` : '';
     return `<div class="rest-card">
@@ -400,7 +410,8 @@ function renderRestrooms(){
       </div>
       ${r.note ? `<div class="rnote">${escapeHtml(r.note)}</div>` : ''}
       <div class="rtags">${tags}</div>
-      <div class="rfoot"><button class="report-btn" data-report="${r.id}">Report incorrect info</button></div>
+      ${isOwnSpot ? '' : `<div class="rfoot"><button class="report-btn" data-report="${r.id}">Report incorrect info</button></div>
+      <div class="rest-report-panel" id="reportPanel-${r.id}"></div>`}
     </div>`;
   }).join('');
   if(restroomsHasMore){
@@ -432,19 +443,47 @@ function renderRestrooms(){
     });
   });
   list.querySelectorAll('[data-report]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      const id = +b.dataset.report;
-      const r = restrooms.find(x=>x.id === id);
-      if(!r) return;
-      const newCount = (r.reportCount||0) + 1;
-      try{
-        const { error } = await sb.from('restrooms').update({report_count:newCount}).eq('id', id);
-        if(error) throw error;
-        r.reportCount = newCount;
-        b.textContent = 'Reported — thanks';
-        b.disabled = true;
-      }catch(e){ console.error('report failed', e); }
-    });
+    b.addEventListener('click', ()=> toggleReportPanel(+b.dataset.report, b));
+  });
+}
+
+function toggleReportPanel(id, reportBtn){
+  const panel = document.getElementById(`reportPanel-${id}`);
+  if(!panel) return;
+  if(panel.innerHTML){ panel.innerHTML = ''; return; }
+  panel.innerHTML = `
+    <div class="consent-panel">
+      Why are you reporting this spot? Three separate reports send it for review and hide it from the public list until an admin checks it.
+      <select id="reportReason-${id}" aria-label="Report reason" style="width:100%;margin-top:8px;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-family:inherit;">
+        ${Object.entries(REPORT_REASON_LABELS).map(([k,l])=>`<option value="${k}">${escapeHtml(l)}</option>`).join('')}
+      </select>
+      <div class="cbtns">
+        <button class="allow" type="button" id="reportSubmit-${id}">Submit report</button>
+        <button class="cancel" type="button" id="reportCancel-${id}">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById(`reportCancel-${id}`).addEventListener('click', ()=>{ panel.innerHTML = ''; });
+  document.getElementById(`reportSubmit-${id}`).addEventListener('click', async ()=>{
+    const reason = document.getElementById(`reportReason-${id}`).value;
+    const submitBtn = document.getElementById(`reportSubmit-${id}`);
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+    try{
+      await ensureAuth();
+      const { error } = await sb.from('restroom_reports').insert({ restroom_id: id, reason });
+      if(error){
+        if(error.code === '23505'){
+          panel.innerHTML = '<div class="consent-panel">You\'ve already reported this spot — thanks, it\'s on file.</div>';
+        } else throw error;
+      } else {
+        panel.innerHTML = '<div class="consent-panel">Reported — thanks for flagging it.</div>';
+      }
+      reportBtn.disabled = true;
+      reportBtn.textContent = 'Reported';
+    }catch(e){
+      console.error('report failed', e);
+      panel.innerHTML = '<div class="consent-panel">Could not submit — check your connection and try again.</div>';
+    }
   });
 }
 
