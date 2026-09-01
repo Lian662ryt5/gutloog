@@ -1,0 +1,19 @@
+{
+  "name": "gutloog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gut Log - IBD/Bristol Stool Scale symptom tracker",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lian662ryt5/gutloog.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}
