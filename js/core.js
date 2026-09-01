@@ -14,6 +14,12 @@ consentContinueBtn.addEventListener('click', ()=>{
   localStorage.setItem(CONSENT_KEY, 'true');
   consentGate.classList.add('hidden');
 });
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(e=> console.error('service worker registration failed', e));
+  });
+}
+
 const SUPABASE_URL = 'https://iftxfnhwdyqzllzmjoca.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Mf-INKOUbWP12FQnW8bQrA_b_zJoZXh';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
