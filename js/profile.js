@@ -5,7 +5,7 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 function currentStreak(entriesList){
   const days = new Set();
   entriesList.forEach(e=>{
-    if(e.kind === 'food') return;
+    if(e.kind !== 'stool') return;
     const d = new Date(e.ts); d.setHours(0,0,0,0);
     days.add(d.getTime());
   });
@@ -50,7 +50,7 @@ function renderProfile(){
   const avatarEl = document.getElementById('profileAvatar');
   if(avatarEl){
     if(currentAvatarUrl){
-      avatarEl.innerHTML = `<img src="${currentAvatarUrl}?t=${Date.now()}" alt="">`;
+      avatarEl.innerHTML = `<img src="${currentAvatarUrl}?t=${Date.now()}" alt="" decoding="async">`;
     } else {
       const letter = (currentUsername || 'G').trim().charAt(0).toUpperCase() || 'G';
       avatarEl.innerHTML = `<span>${escapeHtml(letter)}</span>`;
@@ -151,7 +151,7 @@ function bindProfileEvents(){
   usernameEditBtn.addEventListener('click', ()=>{
     const slot = document.getElementById('usernameEditSlot');
     slot.innerHTML = `<div class="card"><div class="username-edit-row">
-      <input type="text" id="usernameInput" maxlength="40" placeholder="Enter a username" value="${escapeHtml(currentUsername||'')}">
+      <input type="text" id="usernameInput" maxlength="40" placeholder="Enter a username" aria-label="Username" value="${escapeHtml(currentUsername||'')}">
       <button class="username-save-btn" type="button" id="usernameSaveBtn">Save</button>
       <button class="username-cancel-btn" type="button" id="usernameCancelBtn" aria-label="Cancel editing username">✕</button>
     </div></div>`;

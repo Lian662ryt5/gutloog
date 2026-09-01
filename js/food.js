@@ -73,7 +73,7 @@ function renderFoodPreview(){
   if(!pendingFood){ foodPreview.classList.remove('show'); return; }
   const notFound = !pendingFood.name;
   foodPreview.innerHTML = `
-    ${pendingFood.image ? `<img src="${pendingFood.image}" alt="">` : `<div class="food-icon">🍽️</div>`}
+    ${pendingFood.image ? `<img src="${pendingFood.image}" alt="" decoding="async">` : `<div class="food-icon">🍽️</div>`}
     <div class="fp-body">
       ${notFound
         ? `<input type="text" id="fpNameFix" placeholder="Product not found — type its name" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:16px;">`
@@ -250,10 +250,22 @@ function render(){
     const delBtn = e.pendingSync ? '' : `<button class="del-btn" data-id="${e.id}" aria-label="Delete entry">×</button>`;
     if(e.kind === 'food'){
       html += `<div class="log-entry">
-        ${e.foodImage ? `<div class="food-icon"><img src="${e.foodImage}" alt=""></div>` : `<div class="food-icon">🍽️</div>`}
+        ${e.foodImage ? `<div class="food-icon"><img src="${e.foodImage}" alt="" loading="lazy" decoding="async"></div>` : `<div class="food-icon">🍽️</div>`}
         <div class="log-body">
           <div class="log-meta"><span>${escapeHtml(e.foodName)} · ${time}</span>${delBtn}</div>
           <div class="log-tags">${e.foodBrand ? `<span class="tag">${escapeHtml(e.foodBrand)}</span>` : ''}<span class="tag">Food</span>${pendingTag}</div>
+        </div>
+      </div>`;
+      return;
+    }
+    if(e.kind === 'medication' || e.kind === 'water'){
+      const meta = KIND_META[e.kind];
+      html += `<div class="log-entry">
+        <div class="food-icon">${meta.icon}</div>
+        <div class="log-body">
+          <div class="log-meta"><span>${meta.label} · ${time}</span>${delBtn}</div>
+          <div class="log-tags"><span class="tag">${meta.label}</span>${pendingTag}</div>
+          ${e.note ? `<div class="log-note">${escapeHtml(e.note)}</div>` : ''}
         </div>
       </div>`;
       return;
@@ -294,7 +306,7 @@ function renderStats(){
   const strip = document.getElementById('statsStrip');
   const now = Date.now();
   const weekAll = entries.filter(e=> now - new Date(e.ts).getTime() < 7*86400000);
-  const week = weekAll.filter(e=> e.kind !== 'food');
+  const week = weekAll.filter(e=> e.kind === 'stool');
   const flareCount = week.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)).length;
   const avgType = week.length ? (week.reduce((s,e)=>s+e.type,0)/week.length).toFixed(1) : '—';
   strip.innerHTML = `
@@ -304,17 +316,28 @@ function renderStats(){
   `;
 }
 
+const ESCAPE_HTML_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
 function escapeHtml(s){
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  return String(s).replace(/[&<>"']/g, c => ESCAPE_HTML_MAP[c]);
+}
+
+const KIND_META = {
+  food:       { icon:'🍽️', label:'Food' },
+  medication: { icon:'💊', label:'Medication' },
+  water:      { icon:'💧', label:'Water' }
+};
+
+function entrySummary(e){
+  if(e.kind === 'stool') return `Type ${e.type}`;
+  if(e.kind === 'food') return e.foodName;
+  return KIND_META[e.kind] ? KIND_META[e.kind].label : e.kind;
 }
 
 function renderHomeStats(){
   const wrap = document.getElementById('homeStats');
   if(!wrap) return;
   const last = entries[0];
-  const lastTxt = last ? (last.kind === 'food' ? `${last.foodName} · ${dayLabel(last.ts).toLowerCase()}` : `Type ${last.type} · ${dayLabel(last.ts).toLowerCase()}`) : 'No entries yet';
+  const lastTxt = last ? `${entrySummary(last)} · ${dayLabel(last.ts).toLowerCase()}` : 'No entries yet';
   wrap.innerHTML = `
     <div class="stat"><div class="n">${entries.length}</div><div class="l">Total logs</div></div>
     <div class="stat"><div class="n">${restrooms.length}</div><div class="l">Saved spots</div></div>

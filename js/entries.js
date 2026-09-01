@@ -115,7 +115,7 @@ async function renderEmailBanner(){
       <div class="eb-title">⚠️ Your data lives only on this device</div>
       Add your email so you never lose your history — no password needed, just a confirmation link.
       <div class="eb-row">
-        <input type="email" id="secureEmailInput" placeholder="you@example.com">
+        <input type="email" id="secureEmailInput" placeholder="you@example.com" aria-label="Email address">
         <button id="secureEmailBtn">Save</button>
       </div>
     </div>`;
@@ -204,6 +204,9 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
     const painTxt = e.pain===null||e.pain===undefined ? '' : painLabels[e.pain];
     if(e.kind === 'food'){
       return [d.toLocaleDateString(), d.toLocaleTimeString(), 'Food', '', '', '', e.foodName||'', e.foodBrand||'', e.note||''].map(csvField).join(',');
+    }
+    if(e.kind === 'medication' || e.kind === 'water'){
+      return [d.toLocaleDateString(), d.toLocaleTimeString(), KIND_META[e.kind].label, '', '', '', '', '', e.note||''].map(csvField).join(',');
     }
     return [d.toLocaleDateString(), d.toLocaleTimeString(), 'Symptom', e.type, e.tags.join('; '), painTxt, '', '', e.note||''].map(csvField).join(',');
   }).join('\n');

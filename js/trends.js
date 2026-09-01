@@ -19,7 +19,7 @@ function renderTrends(){
   }
   const counts = days.map(d=>{
     const dayEntries = entries.filter(e=>{
-      if(e.kind === 'food') return false;
+      if(e.kind !== 'stool') return false;
       const ed = new Date(e.ts); ed.setHours(0,0,0,0);
       return ed.getTime() === d.getTime();
     });
@@ -67,7 +67,7 @@ function renderTrends(){
 function renderFoodCorrelation(){
   const el = document.getElementById('foodCorrelation');
   if(!el) return;
-  const flares = entries.filter(e=> e.kind !== 'food' && (e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)));
+  const flares = entries.filter(e=> e.kind === 'stool' && (e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)));
   const foods = entries.filter(e=> e.kind === 'food');
   if(!flares.length || !foods.length){
     el.innerHTML = '<div class="empty">Log some food and flagged symptoms to see patterns here.</div>';
@@ -105,7 +105,7 @@ function renderFoodCorrelation(){
 function renderQuickRepeat(){
   const slot = document.getElementById('quickRepeatSlot');
   if(!slot) return;
-  const last = entries.find(e=> e.kind !== 'food');
+  const last = entries.find(e=> e.kind === 'stool');
   if(!last){ slot.innerHTML = ''; return; }
   const tagTxt = last.tags.length ? last.tags.map(t=>TAG_LABELS[t]||t).join(', ') : 'no symptoms';
   slot.innerHTML = `
