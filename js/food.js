@@ -258,6 +258,18 @@ function render(){
       </div>`;
       return;
     }
+    if(e.kind === 'medication' || e.kind === 'water'){
+      const meta = KIND_META[e.kind];
+      html += `<div class="log-entry">
+        <div class="food-icon">${meta.icon}</div>
+        <div class="log-body">
+          <div class="log-meta"><span>${meta.label} · ${time}</span>${delBtn}</div>
+          <div class="log-tags"><span class="tag">${meta.label}</span>${pendingTag}</div>
+          ${e.note ? `<div class="log-note">${escapeHtml(e.note)}</div>` : ''}
+        </div>
+      </div>`;
+      return;
+    }
     const tags = e.tags.map(t=>`<span class="tag flag">${TAG_LABELS[t]||t}</span>`).join('');
     const painTag = (e.pain!==null && e.pain!==undefined && e.pain>0) ? `<span class="tag">Pain: ${painLabels[e.pain]}</span>` : '';
     const restTag = e.restName ? `<span class="tag rest-linked-tag">📍 ${escapeHtml(e.restName)}</span>` : '';
@@ -294,7 +306,7 @@ function renderStats(){
   const strip = document.getElementById('statsStrip');
   const now = Date.now();
   const weekAll = entries.filter(e=> now - new Date(e.ts).getTime() < 7*86400000);
-  const week = weekAll.filter(e=> e.kind !== 'food');
+  const week = weekAll.filter(e=> e.kind === 'stool');
   const flareCount = week.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)).length;
   const avgType = week.length ? (week.reduce((s,e)=>s+e.type,0)/week.length).toFixed(1) : '—';
   strip.innerHTML = `
@@ -309,11 +321,23 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ESCAPE_HTML_MAP[c]);
 }
 
+const KIND_META = {
+  food:       { icon:'🍽️', label:'Food' },
+  medication: { icon:'💊', label:'Medication' },
+  water:      { icon:'💧', label:'Water' }
+};
+
+function entrySummary(e){
+  if(e.kind === 'stool') return `Type ${e.type}`;
+  if(e.kind === 'food') return e.foodName;
+  return KIND_META[e.kind] ? KIND_META[e.kind].label : e.kind;
+}
+
 function renderHomeStats(){
   const wrap = document.getElementById('homeStats');
   if(!wrap) return;
   const last = entries[0];
-  const lastTxt = last ? (last.kind === 'food' ? `${last.foodName} · ${dayLabel(last.ts).toLowerCase()}` : `Type ${last.type} · ${dayLabel(last.ts).toLowerCase()}`) : 'No entries yet';
+  const lastTxt = last ? `${entrySummary(last)} · ${dayLabel(last.ts).toLowerCase()}` : 'No entries yet';
   wrap.innerHTML = `
     <div class="stat"><div class="n">${entries.length}</div><div class="l">Total logs</div></div>
     <div class="stat"><div class="n">${restrooms.length}</div><div class="l">Saved spots</div></div>

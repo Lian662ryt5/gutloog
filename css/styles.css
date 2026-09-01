@@ -792,6 +792,16 @@
     display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
     padding:3px 9px;border-radius:20px;background:var(--teal-soft);color:var(--teal-deep);
   }
+  .reminder-type-row{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;}
+  .reminder-type-row:last-child{margin-bottom:0;}
+  .reminder-type-toggle{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;}
+  .reminder-type-toggle input{width:18px;height:18px;flex-shrink:0;accent-color:var(--teal-deep);}
+  .reminder-type-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .reminder-time-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .reminder-time-row input[type="time"]{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;background:var(--surface);color:var(--ink);}
+  .reminder-interval-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:13px;color:var(--ink-soft);align-items:center;}
+  .reminder-interval-row select, .reminder-interval-row input[type="time"]{border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px;background:var(--surface);color:var(--ink);margin-left:4px;}
+  .remMessage{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;margin-top:2px;background:var(--surface);color:var(--ink);}
   .plan-badge.free{background:var(--paper);color:var(--ink-soft);border:1px solid var(--line);}
   .pricing-grid{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
   .plan-card{

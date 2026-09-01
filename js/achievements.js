@@ -24,7 +24,7 @@ const ACHIEVEMENTS = [
 function longestStreak(entriesList){
   const days = new Set();
   entriesList.forEach(e=>{
-    if(e.kind === 'food') return;
+    if(e.kind !== 'stool') return;
     const d = new Date(e.ts); d.setHours(0,0,0,0);
     days.add(d.getTime());
   });

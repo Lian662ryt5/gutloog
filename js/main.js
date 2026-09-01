@@ -10,5 +10,7 @@ function init(){
   loadEntries();      // also triggers renderTrends()/renderHomeStats() again once data arrives
   loadRestrooms();
   loadProfileTier();
+  loadReminderSettings();
+  handleReminderUrlParams();
 }
 init();

@@ -205,6 +205,9 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
     if(e.kind === 'food'){
       return [d.toLocaleDateString(), d.toLocaleTimeString(), 'Food', '', '', '', e.foodName||'', e.foodBrand||'', e.note||''].map(csvField).join(',');
     }
+    if(e.kind === 'medication' || e.kind === 'water'){
+      return [d.toLocaleDateString(), d.toLocaleTimeString(), KIND_META[e.kind].label, '', '', '', '', '', e.note||''].map(csvField).join(',');
+    }
     return [d.toLocaleDateString(), d.toLocaleTimeString(), 'Symptom', e.type, e.tags.join('; '), painTxt, '', '', e.note||''].map(csvField).join(',');
   }).join('\n');
   const blob = new Blob([header+rows], {type:'text/csv'});
