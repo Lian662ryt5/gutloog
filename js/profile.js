@@ -57,7 +57,7 @@ function renderProfile(){
   const avatarEl = document.getElementById('profileAvatar');
   if(avatarEl){
     if(currentAvatarUrl){
-      avatarEl.innerHTML = `<img src="${currentAvatarUrl}?t=${Date.now()}" alt="" decoding="async">`;
+      avatarEl.innerHTML = `<img src="${escapeHtml(currentAvatarUrl)}?t=${Date.now()}" alt="" decoding="async">`;
     } else {
       const letter = (currentUsername || 'G').trim().charAt(0).toUpperCase() || 'G';
       avatarEl.innerHTML = `<span>${escapeHtml(letter)}</span>`;

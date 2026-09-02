@@ -23,6 +23,21 @@
     if (count >= REPORT_HIDE_THRESHOLD) restroom.hidden = true;
   }
 
+  function isCurrentUserAdmin(tables) {
+    const profile = (tables.profiles || []).find((p) => p.id === CURRENT_USER_ID);
+    return !!(profile && profile.is_admin);
+  }
+
+  // Mirrors the real RLS policy "Authenticated users can view visible
+  // restrooms" (hidden = false OR auth.uid() = user_id OR is_admin()). The
+  // client never applies this filter itself - it's enforced entirely by
+  // the database - so without simulating it here, a client-side regression
+  // that started showing hidden spots to everyone would pass every test.
+  function filterVisibleRestrooms(tables, rowsIn) {
+    const admin = isCurrentUserAdmin(tables);
+    return rowsIn.filter((r) => !r.hidden || r.user_id === CURRENT_USER_ID || admin);
+  }
+
   function makeFakeSupabase(tables) {
     function query(tableName) {
       const state = { filters: [], orders: [], rangeVal: null, limitVal: null, countOpt: null, singleMode: null };
@@ -136,7 +151,9 @@
           return { data: null, error: null };
         }
 
-        let data = applyFilters(rows());
+        let source = rows();
+        if (tableName === 'restrooms') source = filterVisibleRestrooms(tables, source);
+        let data = applyFilters(source);
         const totalCount = data.length;
         data = applyOrder(data);
         if (state.rangeVal) data = data.slice(state.rangeVal[0], state.rangeVal[1] + 1);
