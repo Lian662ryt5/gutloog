@@ -37,10 +37,10 @@ test.describe('authentication & first-run flow', () => {
     await page.click('#consentContinueBtn');
 
     await expect(page.locator('#onboardingGate')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#onboardingTitle')).toHaveText('Track your symptoms');
+    await expect(page.locator('#onboardingTitle')).toHaveText('Welcome to Gut Log');
 
-    // Step through all 4 slides.
-    for (let i = 0; i < 3; i++) {
+    // Step through all 5 slides (welcome + 4 feature slides).
+    for (let i = 0; i < 4; i++) {
       await page.click('#onboardingNextBtn');
     }
     await expect(page.locator('#onboardingNextBtn')).toHaveText('Get started');

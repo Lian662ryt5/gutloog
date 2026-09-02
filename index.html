@@ -29,10 +29,13 @@
 </div>
 <div class="onboarding-gate hidden" id="onboardingGate">
   <div class="onboarding-card">
+    <div class="onboarding-accent" aria-hidden="true"></div>
     <button class="onboarding-skip" id="onboardingSkipBtn" type="button">Skip</button>
-    <div class="onboarding-icon" id="onboardingIcon" aria-hidden="true"></div>
-    <h2 id="onboardingTitle"></h2>
-    <p id="onboardingBody"></p>
+    <div class="onboarding-content" id="onboardingContent">
+      <div class="onboarding-icon-badge"><div class="onboarding-icon" id="onboardingIcon" aria-hidden="true"></div></div>
+      <h2 id="onboardingTitle"></h2>
+      <p id="onboardingBody"></p>
+    </div>
     <div class="onboarding-dots" id="onboardingDots" role="progressbar" aria-label="Onboarding progress"></div>
     <div class="onboarding-actions">
       <button class="loc-btn" id="onboardingBackBtn" type="button">Back</button>
@@ -61,20 +64,20 @@
   </div>
 
   <div class="tabpage active" id="page-home" role="tabpanel" aria-labelledby="tab-home">
-    <div class="card" id="pricingCard">
-      <h2>Go Premium <span class="plan-badge free" id="planBadge">Free</span></h2>
-      <div id="checkoutBannerSlot"></div>
-      <div class="pricing-grid" id="pricingGrid"></div>
-      <div class="foot-note" style="margin-top:8px;padding:0;text-align:left;">Cancel anytime. Payments handled securely by Stripe.</div>
-      <div class="plan-legal">By subscribing, you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Monthly/Annual renew automatically until cancelled.</div>
-    </div>
-
-    <div class="card" id="todayCard">
-      <h2 id="dashGreeting">Today</h2>
+    <div class="card hero-card" id="todayCard">
+      <div class="hero-greeting-row">
+        <div>
+          <div class="hero-eyebrow" id="dashDateline"></div>
+          <h2 id="dashGreeting">Good morning</h2>
+        </div>
+        <div class="hero-streak" id="heroStreak" title="Current logging streak">
+          <span class="hero-streak-flame" aria-hidden="true">🔥</span>
+          <span class="hero-streak-n" id="heroStreakN">0</span>
+        </div>
+      </div>
       <div id="todaySummary"></div>
     </div>
 
-    <div id="emailBannerSlot"></div>
     <div class="card">
       <h2>What do you need right now?</h2>
       <div class="home-choices">
@@ -109,14 +112,32 @@
       </div>
     </div>
 
-    <div class="card" id="remindersSnapshotCard">
-      <h2>Reminders</h2>
-      <div id="remindersSnapshot"></div>
+    <div class="card" id="recentActivityCard">
+      <div class="card-head-row">
+        <h2>Recent activity</h2>
+        <button class="text-link-btn" type="button" id="viewAllActivityBtn">View all</button>
+      </div>
+      <div id="recentActivityList"></div>
     </div>
 
     <div class="card" id="insightsCard">
       <h2>Insights</h2>
       <div id="insightsList"></div>
+    </div>
+
+    <div class="card" id="remindersSnapshotCard">
+      <h2>Reminders</h2>
+      <div id="remindersSnapshot"></div>
+    </div>
+
+    <div id="emailBannerSlot"></div>
+
+    <div class="card" id="pricingCard">
+      <h2>Go Premium <span class="plan-badge free" id="planBadge">Free</span></h2>
+      <div id="checkoutBannerSlot"></div>
+      <div class="pricing-grid" id="pricingGrid"></div>
+      <div class="foot-note" style="margin-top:8px;padding:0;text-align:left;">Cancel anytime. Payments handled securely by Stripe.</div>
+      <div class="plan-legal">By subscribing, you agree to our <a href="terms.html" target="_blank">Terms</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Monthly/Annual renew automatically until cancelled.</div>
     </div>
   </div>
 
