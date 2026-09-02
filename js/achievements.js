@@ -43,6 +43,38 @@ function computeAchievementStats(){
   };
 }
 
+// Home dashboard preview: overall unlock progress + a mini badge row,
+// reusing the same ACHIEVEMENTS/computeAchievementStats the full Badges
+// tab uses so the two never drift out of sync.
+function renderAchievementsSnapshot(){
+  const el = document.getElementById('achievementsSnapshot');
+  if(!el) return;
+  const stats = computeAchievementStats();
+  const states = ACHIEVEMENTS.map(a=> ({
+    ...a,
+    unlocked: !!a.check(stats),
+    progressText: a.progress ? a.progress(stats) : null,
+  }));
+  const unlockedCount = states.filter(a=>a.unlocked).length;
+  const pct = Math.round((unlockedCount / ACHIEVEMENTS.length) * 100);
+
+  const chips = states.map(a=> `
+    <div class="mini-badge ${a.unlocked ? 'unlocked' : 'locked'}" role="img" aria-label="${escapeHtml(a.name)}, ${a.unlocked ? 'unlocked' : 'locked'}">
+      <span aria-hidden="true">${a.icon}</span>
+    </div>`).join('');
+
+  const nextUp = states.find(a=> !a.unlocked && a.progressText);
+
+  el.innerHTML = `
+    <div class="ach-snapshot-head"><span class="ach-snapshot-count">${unlockedCount} of ${ACHIEVEMENTS.length} unlocked</span></div>
+    <div class="ach-progress-track"><div class="ach-progress-fill" style="width:${pct}%"></div></div>
+    <div class="mini-badge-row">${chips}</div>
+    ${nextUp ? `<div class="ach-next-up">Next up: ${escapeHtml(nextUp.name)} — ${escapeHtml(nextUp.progressText)}</div>` : ''}
+  `;
+}
+
+document.getElementById('viewAllAchievementsBtn')?.addEventListener('click', ()=> switchTab('achievements'));
+
 function renderAchievements(){
   const grid = document.getElementById('achievementsGrid');
   if(!grid) return;
