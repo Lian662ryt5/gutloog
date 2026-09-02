@@ -2,6 +2,8 @@ const path = require('path');
 
 const FAKE_SUPABASE_PATH = path.join(__dirname, 'fake-supabase.js');
 const SUPABASE_CDN_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+const FAKE_JSPDF_PATH = path.join(__dirname, 'fake-jspdf.js');
+const JSPDF_CDN_URL = 'https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js';
 
 const DEFAULT_TABLES = () => ({
   entries: [],
@@ -46,6 +48,19 @@ async function passConsentAndOnboarding(page) {
   }
 }
 
+/**
+ * Intercepts the real jsPDF CDN script (loaded lazily by js/report.js only
+ * when a doctor report is actually generated) and replaces it with a
+ * lightweight call-recording stand-in (tests/fixtures/fake-jspdf.js), same
+ * pattern as mockSupabase. Call before the report-generation button is
+ * clicked - no need to call it for tests that never touch that feature.
+ */
+async function mockJsPDF(page) {
+  await page.route(JSPDF_CDN_URL, (route) =>
+    route.fulfill({ path: FAKE_JSPDF_PATH, contentType: 'application/javascript' })
+  );
+}
+
 function isoAt(daysAgo, hour = 9) {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
@@ -53,4 +68,4 @@ function isoAt(daysAgo, hour = 9) {
   return d.toISOString();
 }
 
-module.exports = { mockSupabase, passConsentAndOnboarding, isoAt, SUPABASE_CDN_URL, DEFAULT_TABLES };
+module.exports = { mockSupabase, mockJsPDF, passConsentAndOnboarding, isoAt, SUPABASE_CDN_URL, JSPDF_CDN_URL, DEFAULT_TABLES };
