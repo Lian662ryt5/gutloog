@@ -382,15 +382,18 @@
     padding:2px 8px;border-radius:20px;font-weight:700;white-space:nowrap;
   }
   .email-banner{
-    background:var(--brick-soft);
-    border:1.5px solid var(--brick);
+    /* color-mix (not a hand-picked hex) so this stays correctly light/dark
+       per theme without needing a new --ochre-soft token defined 6 times
+       over in :root and every html.theme-* block. */
+    background:color-mix(in srgb, var(--ochre) 5%, var(--surface));
+    border:1.5px solid var(--ochre);
     border-radius:10px;
     padding:12px;
     margin-bottom:14px;
     font-size:12px;
     color:var(--ink);
   }
-  .email-banner .eb-title{font-weight:700;color:var(--brick);margin-bottom:4px;}
+  .email-banner .eb-title{font-weight:700;color:var(--ochre);margin-bottom:4px;}
   .email-banner .eb-row{display:flex;gap:8px;margin-top:8px;}
   .email-banner input{
     flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:16px;
@@ -583,6 +586,73 @@
   .dash-greeting{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
   .dash-today-line{font-size:15px;font-weight:600;margin-bottom:14px;}
   .dash-today-line .flag{color:var(--brick);}
+
+  /* Home dashboard hero card - the personal greeting is the app's actual
+     landing screen, so it gets a distinct look instead of matching every
+     other white card 1:1. */
+  .hero-card{
+    background:linear-gradient(135deg, var(--teal-deep), var(--teal));
+    border:none;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-card::after{
+    content:'';
+    position:absolute;
+    top:-50px;right:-30px;
+    width:150px;height:150px;
+    border-radius:50%;
+    background:rgba(255,255,255,.07);
+    pointer-events:none;
+  }
+  .hero-greeting-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;position:relative;z-index:1;}
+  .hero-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.68);margin-bottom:3px;}
+  .hero-card h2#dashGreeting{
+    font-family:Georgia,'Source Serif',serif;
+    font-size:23px;
+    font-weight:700;
+    color:#fff;
+    margin:0;
+  }
+  .hero-streak{
+    display:flex;align-items:center;gap:5px;flex-shrink:0;
+    background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.22);
+    border-radius:20px;
+    padding:6px 12px;
+    opacity:.55;
+    filter:grayscale(1);
+    transition:opacity .3s ease, filter .3s ease;
+  }
+  .hero-streak.lit{opacity:1;filter:none;}
+  .hero-streak-flame{font-size:15px;line-height:1;}
+  .hero-streak-n{font-family:'Courier New',monospace;font-weight:700;font-size:15px;color:#fff;}
+  .hero-card .dash-today-line{
+    color:rgba(255,255,255,.95);font-weight:500;
+    margin-top:16px;position:relative;z-index:1;
+  }
+  .hero-card .dash-today-line .flag{color:#FFDCCB;font-weight:700;}
+  .hero-card .home-stats{position:relative;z-index:1;}
+  .hero-card .home-stats .stat{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);}
+  .hero-card .home-stats .stat .n{color:#fff;}
+  .hero-card .home-stats .stat .l{color:rgba(255,255,255,.72);}
+
+  .card-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .card-head-row h2{margin:0;}
+  .text-link-btn{
+    background:none;border:none;color:var(--teal-deep);
+    font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 2px;
+  }
+  .text-link-btn:hover{text-decoration:underline;}
+  .recent-activity-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .recent-activity-row:last-child{border-bottom:none;padding-bottom:0;}
+  .recent-activity-row:first-child{padding-top:0;}
+  .recent-activity-row .food-icon, .recent-activity-row .log-icon{flex-shrink:0;}
+  .ra-body{flex:1;min-width:0;}
+  .ra-label{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .ra-label .flag{color:var(--brick);}
+  .ra-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
   .insight-line{font-size:13.5px;line-height:1.5;padding:9px 0;border-bottom:1px solid var(--line);}
   .insight-line:last-child{border-bottom:none;padding-bottom:0;}
   .insight-line:first-child{padding-top:0;}
@@ -723,19 +793,37 @@
   }
   .onboarding-gate.hidden{display:none;}
   .onboarding-card{
-    background:var(--surface);border-radius:16px;box-shadow:var(--shadow);
-    padding:30px 22px 22px;max-width:380px;width:100%;
-    text-align:center;position:relative;
+    background:var(--surface);border-radius:18px;box-shadow:var(--shadow);
+    padding:36px 24px 24px;max-width:380px;width:100%;
+    text-align:center;position:relative;overflow:hidden;
+  }
+  .onboarding-accent{
+    position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg, var(--teal-deep), var(--teal), var(--ochre));
   }
   .onboarding-skip{
-    position:absolute;top:14px;right:14px;
+    position:absolute;top:16px;right:14px;
     background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;padding:4px 8px;
   }
-  .onboarding-icon{font-size:44px;margin-bottom:14px;}
-  .onboarding-card h2{font-family:Georgia,'Source Serif',serif;font-size:19px;font-weight:600;margin:0 0 10px;color:var(--teal-deep);}
+  .onboarding-icon-badge{
+    width:76px;height:76px;border-radius:50%;
+    background:var(--teal-soft);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+  }
+  .onboarding-icon{font-size:36px;line-height:1;}
+  .onboarding-card h2{font-family:Georgia,'Source Serif',serif;font-size:20px;font-weight:700;margin:0 0 10px;color:var(--teal-deep);}
   .onboarding-card p{font-size:13.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 18px;}
+  .onboarding-content.step-in{animation:onboardingStepIn .35s ease;}
+  @keyframes onboardingStepIn{
+    from{opacity:0;transform:translateY(6px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .onboarding-content.step-in{animation:none;}
+  }
   .onboarding-dots{display:flex;justify-content:center;gap:6px;margin-bottom:18px;}
-  .onboarding-dot{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .onboarding-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:width .2s ease, background-color .2s ease;}
   .onboarding-dot.active{background:var(--teal-deep);width:18px;border-radius:4px;}
   .onboarding-actions{display:flex;align-items:center;gap:10px;}
   .onboarding-actions #onboardingBackBtn{flex:0 0 auto;}

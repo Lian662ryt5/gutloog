@@ -9,6 +9,7 @@
 const ONBOARDING_KEY = 'gutlog_onboarded_v1';
 
 const ONBOARDING_STEPS = [
+  { icon:'👋', title:'Welcome to Gut Log', body:"Your private, judgment-free space to track symptoms and spot patterns over time — built for people living with IBD. Here's a quick look at what you can do." },
   { icon:'📋', title:'Track your symptoms', body:"Log Bristol type, pain, and triggers in seconds — build a clear picture for you and your doctor." },
   { icon:'🚻', title:'Find & share restrooms', body:'Locate nearby restrooms fast, and save trusted, clean spots for the community.' },
   { icon:'🔔', title:"Never miss a log", body:"Set reminders for meals, medication, symptoms, and water — smart enough to skip days you've already logged." },
@@ -35,7 +36,17 @@ function renderOnboardingStep(){
   document.getElementById('onboardingDots').innerHTML = ONBOARDING_STEPS
     .map((_,i)=>`<span class="onboarding-dot ${i===onboardingStep?'active':''}"></span>`).join('');
   document.getElementById('onboardingBackBtn').style.visibility = onboardingStep === 0 ? 'hidden' : 'visible';
-  document.getElementById('onboardingNextBtn').textContent = onboardingStep === ONBOARDING_STEPS.length-1 ? 'Get started' : 'Next';
+  document.getElementById('onboardingNextBtn').textContent = onboardingStep === ONBOARDING_STEPS.length-1
+    ? 'Get started'
+    : (onboardingStep === 0 ? "Let's go" : 'Next');
+
+  // Retrigger the step-in animation (no-op visually for users who have
+  // prefers-reduced-motion, since the animation itself is disabled for
+  // them in CSS - this just re-adds the class each step).
+  const content = document.getElementById('onboardingContent');
+  content.classList.remove('step-in');
+  void content.offsetWidth; // force reflow so the animation restarts
+  content.classList.add('step-in');
 }
 
 function finishOnboarding(){

@@ -13,8 +13,17 @@ function renderTodayCard(){
   const summaryEl = document.getElementById('todaySummary');
   if(!greetingEl || !summaryEl) return;
 
-  const hour = new Date().getHours();
+  const now = new Date();
+  const hour = now.getHours();
   greetingEl.textContent = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+  const datelineEl = document.getElementById('dashDateline');
+  if(datelineEl) datelineEl.textContent = now.toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+
+  const streak = currentStreak(streakTimestamps);
+  const streakEl = document.getElementById('heroStreak');
+  const streakNEl = document.getElementById('heroStreakN');
+  if(streakNEl) streakNEl.textContent = streak;
+  if(streakEl) streakEl.classList.toggle('lit', streak > 0);
 
   const todays = todaysEntries();
   const stoolToday = todays.filter(e=>e.kind==='stool');
@@ -37,11 +46,53 @@ function renderTodayCard(){
   summaryEl.innerHTML = `
     <div class="dash-today-line">${line}</div>
     <div class="home-stats">
-      <div class="stat"><div class="n">${currentStreak(streakTimestamps)}</div><div class="l">Day streak</div></div>
       <div class="stat"><div class="n">${totalEntriesCount}</div><div class="l">Total logs</div></div>
       <div class="stat"><div class="n">${totalRestroomsCount}</div><div class="l">Saved spots</div></div>
     </div>
   `;
+}
+
+const RECENT_ACTIVITY_LIMIT = 4;
+
+// Reuses the same icon classes/markup as the Log tab's own entry list
+// (food.js render()) so a symptom or food icon looks identical whether
+// seen here or there - one visual language, not a parallel one.
+function recentActivityIcon(e){
+  if(e.kind === 'food'){
+    return e.foodImage
+      ? `<div class="food-icon"><img src="${e.foodImage}" alt="" loading="lazy" decoding="async"></div>`
+      : `<div class="food-icon">🍽️</div>`;
+  }
+  if(e.kind === 'medication' || e.kind === 'water') return `<div class="food-icon">${KIND_META[e.kind].icon}</div>`;
+  return `<div class="log-icon">${bristolSVG(e.type, false)}</div>`;
+}
+
+function recentActivityLabel(e){
+  if(e.kind === 'food') return escapeHtml(e.foodName || 'Food');
+  if(e.kind === 'medication' || e.kind === 'water') return KIND_META[e.kind].label;
+  return `Type ${e.type}`;
+}
+
+function renderRecentActivity(){
+  const list = document.getElementById('recentActivityList');
+  if(!list) return;
+  if(!entries.length){
+    list.innerHTML = '<div class="empty">Nothing logged yet — your recent entries will show up here.</div>';
+    return;
+  }
+  const recent = entries.slice(0, RECENT_ACTIVITY_LIMIT);
+  list.innerHTML = recent.map(e=>{
+    const time = new Date(e.ts).toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+    const dl = dayLabel(e.ts);
+    const flagged = e.kind === 'stool' && (e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
+    return `<div class="recent-activity-row">
+      ${recentActivityIcon(e)}
+      <div class="ra-body">
+        <div class="ra-label">${recentActivityLabel(e)}${flagged ? ' <span class="flag">⚠️</span>' : ''}</div>
+        <div class="ra-meta">${dl} · ${time}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderRemindersSnapshot(){
@@ -127,4 +178,7 @@ function renderDashboard(){
   renderTodayCard();
   renderRemindersSnapshot();
   renderInsights();
+  renderRecentActivity();
 }
+
+document.getElementById('viewAllActivityBtn')?.addEventListener('click', ()=> switchTab('log'));
