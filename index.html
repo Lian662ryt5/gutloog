@@ -282,6 +282,23 @@
       <h2>By location</h2>
       <div id="trendByLocation"><div class="empty">Link entries to a saved spot to see patterns here.</div></div>
     </div>
+
+    <div class="card" id="doctorReportCard">
+      <h2>Doctor report</h2>
+      <div class="foot-note" style="margin:0 0 12px;padding:0;text-align:left;">A clinic-ready PDF summary — symptom trends, Bristol Scale distribution, food correlations, flare history, and medication log — for a date range you choose.</div>
+      <div class="row-toggles" id="reportPresets" role="group" aria-label="Quick date range">
+        <button type="button" class="toggle" data-preset="30" aria-pressed="false">Last 30 days</button>
+        <button type="button" class="toggle" data-preset="90" aria-pressed="false">Last 90 days</button>
+        <button type="button" class="toggle" data-preset="180" aria-pressed="false">Last 6 months</button>
+        <button type="button" class="toggle" data-preset="all" aria-pressed="false">All time</button>
+      </div>
+      <div class="filter-row" style="margin-top:12px;">
+        <input type="date" id="reportFromInput" aria-label="Report start date">
+        <input type="date" id="reportToInput" aria-label="Report end date">
+      </div>
+      <button class="save-btn" id="generateReportBtn" style="margin-top:12px;">Generate PDF report</button>
+      <div id="reportStatus" class="report-status" role="status" aria-live="polite"></div>
+    </div>
   </div>
 
   <div class="tabpage" id="page-themes" role="tabpanel" aria-labelledby="tab-themes">
@@ -393,6 +410,7 @@
 <script src="js/restrooms.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/trends.js"></script>
+<script src="js/report.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/onboarding.js"></script>
