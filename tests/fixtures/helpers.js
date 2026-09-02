@@ -13,6 +13,7 @@ const DEFAULT_TABLES = () => ({
   push_subscriptions: [],
   reminder_log: [],
   profiles: [],
+  client_errors: [],
 });
 
 /**
