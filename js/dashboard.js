@@ -179,6 +179,8 @@ function renderDashboard(){
   renderRemindersSnapshot();
   renderInsights();
   renderRecentActivity();
+  renderTrendsSnapshot();
+  renderAchievementsSnapshot();
 }
 
 document.getElementById('viewAllActivityBtn')?.addEventListener('click', ()=> switchTab('log'));

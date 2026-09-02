@@ -139,6 +139,56 @@ function renderFoodCorrelation(){
   `).join('');
 }
 
+// Home dashboard preview: last 7 days only, re-slicing the same
+// already-fetched trendsStoolEntries the full Trends tab uses - no extra
+// network call, and it stays in sync since loadTrendsData() re-renders
+// both this and the full chart together.
+function renderTrendsSnapshot(){
+  const el = document.getElementById('trendsSnapshot');
+  if(!el) return;
+  if(!trendsStoolEntries.length){
+    el.innerHTML = '<div class="empty">Log a few entries to start seeing trends here.</div>';
+    return;
+  }
+
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i);
+    days.push(d);
+  }
+  const counts = days.map(d=>{
+    const dayEntries = trendsStoolEntries.filter(e=>{
+      const ed = new Date(e.ts); ed.setHours(0,0,0,0);
+      return ed.getTime() === d.getTime();
+    });
+    const flagged = dayEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2)).length;
+    return {total: dayEntries.length, flagged};
+  });
+  const max = Math.max(1, ...counts.map(c=>c.total));
+  const MINI_H = 44;
+  const bars = counts.map((c,i)=>{
+    const h = c.total ? Math.max(4, Math.round((c.total/max)*MINI_H)) : 2;
+    const dateLabel = days[i].toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+    const summary = `${dateLabel}: ${c.total} ${c.total===1?'entry':'entries'}${c.flagged ? `, ${c.flagged} flagged` : ''}`;
+    return `<div class="dash-trend-col" role="img" aria-label="${escapeHtml(summary)}">
+      <span class="dash-trend-flag-mark" aria-hidden="true">${c.flagged ? '▲' : ''}</span>
+      <div class="dash-trend-bar ${c.flagged ? 'flag' : ''}" style="height:${h}px;"></div>
+    </div>`;
+  }).join('');
+
+  const weekTotal = counts.reduce((s,c)=>s+c.total,0);
+  const weekFlagged = counts.reduce((s,c)=>s+c.flagged,0);
+  const summaryLine = `${weekTotal} ${weekTotal===1?'entry':'entries'} this week`
+    + (weekFlagged ? ` · ${weekFlagged} flagged` : ' · none flagged');
+
+  el.innerHTML = `
+    <div class="dash-trend-bars" role="group" aria-label="Daily entries, last 7 days">${bars}</div>
+    <div class="dash-trend-summary">${escapeHtml(summaryLine)}</div>
+  `;
+}
+
+document.getElementById('viewAllTrendsBtn')?.addEventListener('click', ()=> switchTab('trends'));
+
 function renderQuickRepeat(){
   const slot = document.getElementById('quickRepeatSlot');
   if(!slot) return;

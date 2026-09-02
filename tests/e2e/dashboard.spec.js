@@ -56,4 +56,53 @@ test.describe('home dashboard', () => {
     await expect(page.locator('#tab-home')).toHaveClass(/active/);
     await expect(page.locator('#page-home')).toHaveClass(/active/);
   });
+
+  test('the trends snapshot shows a 7-day mini chart and "View all" opens the Trends tab', async ({ page }) => {
+    const entries = [0, 1, 2].map((d, i) => ({
+      id: i + 1, user_id: 'test-user', ts: isoAt(d, 9), kind: 'stool',
+      type: 4, tags: d === 1 ? ['urgent'] : [], pain: d === 1 ? 2 : 0, rest_id: null, rest_name: null, note: '',
+    }));
+    await mockSupabase(page, { entries });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+
+    await expect(page.locator('#trendsSnapshot .dash-trend-col')).toHaveCount(7, { timeout: 5000 });
+    await expect(page.locator('#trendsSnapshot')).toContainText('3 entries this week');
+    await expect(page.locator('#trendsSnapshot')).toContainText('1 flagged');
+
+    await page.click('#viewAllTrendsBtn');
+    await expect(page.locator('.tabbtn.active')).toHaveText('Trends');
+  });
+
+  test('the trends snapshot shows an honest empty state for a brand-new user', async ({ page }) => {
+    await mockSupabase(page);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await expect(page.locator('#trendsSnapshot')).toContainText('Log a few entries', { timeout: 5000 });
+  });
+
+  test('the achievements snapshot shows unlock progress and "View all" opens the Badges tab', async ({ page }) => {
+    const entries = [{
+      id: 1, user_id: 'test-user', ts: isoAt(0, 9), kind: 'stool',
+      type: 4, tags: [], pain: 0, rest_id: null, rest_name: null, note: '',
+    }];
+    await mockSupabase(page, { entries });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+
+    await expect(page.locator('#achievementsSnapshot .ach-snapshot-count')).toHaveText('1 of 8 unlocked', { timeout: 5000 });
+    await expect(page.locator('#achievementsSnapshot .mini-badge')).toHaveCount(8);
+    await expect(page.locator('#achievementsSnapshot .mini-badge.unlocked')).toHaveCount(1);
+
+    await page.click('#viewAllAchievementsBtn');
+    await expect(page.locator('.tabbtn.active')).toHaveText('Badges');
+  });
+
+  test('the achievements snapshot shows a zero-progress state for a brand-new user', async ({ page }) => {
+    await mockSupabase(page);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await expect(page.locator('#achievementsSnapshot .ach-snapshot-count')).toHaveText('0 of 8 unlocked', { timeout: 5000 });
+    await expect(page.locator('#achievementsSnapshot .ach-next-up')).toContainText('7-Day Streak');
+  });
 });
