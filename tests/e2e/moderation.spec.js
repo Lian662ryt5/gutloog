@@ -79,6 +79,25 @@ test.describe('restroom moderation', () => {
     expect(restroom.hidden).toBe(true);
     await expect(page.locator('.rest-card')).toContainText('Pending review — only you can see this');
   });
+
+  test('a spot hidden pending review is not shown to a regular user who neither owns it nor is admin', async ({ page }) => {
+    // The client never filters hidden rows itself - it relies entirely on
+    // the "Authenticated users can view visible restrooms" RLS policy
+    // (hidden=false OR owner OR admin) to keep them out of the public list.
+    await mockSupabase(page, {
+      restrooms: [
+        seedRestroom({ id: 4, name: 'Visible Spot' }),
+        seedRestroom({ id: 5, name: 'Hidden From Everyone', hidden: true, report_count: 3 }),
+      ],
+    });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="restrooms"]');
+
+    await expect(page.locator('#restList .rest-card')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('#restList')).toContainText('Visible Spot');
+    await expect(page.locator('#restList')).not.toContainText('Hidden From Everyone');
+  });
 });
 
 test.describe('admin review queue', () => {

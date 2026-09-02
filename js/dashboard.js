@@ -60,7 +60,7 @@ const RECENT_ACTIVITY_LIMIT = 4;
 function recentActivityIcon(e){
   if(e.kind === 'food'){
     return e.foodImage
-      ? `<div class="food-icon"><img src="${e.foodImage}" alt="" loading="lazy" decoding="async"></div>`
+      ? `<div class="food-icon"><img src="${escapeHtml(e.foodImage)}" alt="" loading="lazy" decoding="async"></div>`
       : `<div class="food-icon">🍽️</div>`;
   }
   if(e.kind === 'medication' || e.kind === 'water') return `<div class="food-icon">${KIND_META[e.kind].icon}</div>`;

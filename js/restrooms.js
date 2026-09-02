@@ -395,9 +395,16 @@ function renderRestrooms(){
   let html = restrooms.map(r=>{
     const stars = '★'.repeat(r.clean||0) + '☆'.repeat(5-(r.clean||0));
     const isOwnSpot = currentUserId && r.userId === currentUserId;
+    // Mirrors the "Owners or admins can delete restrooms" RLS policy
+    // exactly (auth.uid() = user_id OR is_admin()) - showing this button to
+    // anyone else would let them "delete" a spot they can't actually
+    // delete: RLS silently no-ops the request (no error), but the client
+    // would still optimistically drop it from the local list, making it
+    // look deleted until the next reload brings it back.
+    const canDelete = isOwnSpot || currentIsAdmin;
     const tags = r.flags.map(f=>`<span class="tag">${REST_FLAG_LABELS[f]||f}</span>`).join('') +
       (r.hidden ? `<span class="tag pending">🔎 ${isOwnSpot ? 'Pending review — only you can see this' : 'Pending review (hidden from public)'}</span>` : '');
-    const photo = r.photo ? `<img class="rphoto" src="${r.photo}" alt="Photo of ${escapeHtml(r.name)}" loading="lazy" decoding="async">` : '';
+    const photo = r.photo ? `<img class="rphoto" src="${escapeHtml(r.photo)}" alt="Photo of ${escapeHtml(r.name)}" loading="lazy" decoding="async">` : '';
     const mapLink = r.coords ? ` · <a href="https://www.google.com/maps?q=${r.coords.lat},${r.coords.lng}" target="_blank">map</a>` : '';
     return `<div class="rest-card">
       ${photo}
@@ -405,7 +412,7 @@ function renderRestrooms(){
         <div><div class="rname">${escapeHtml(r.name)}</div><div class="rloc">${escapeHtml(r.loc||'')}${mapLink}</div></div>
         <div>
           <div class="rstars" style="color:var(--ochre);">${stars}</div>
-          <button class="del-btn" data-rid="${r.id}" aria-label="Delete spot">×</button>
+          ${canDelete ? `<button class="del-btn" data-rid="${r.id}" aria-label="Delete spot">×</button>` : ''}
         </div>
       </div>
       ${r.note ? `<div class="rnote">${escapeHtml(r.note)}</div>` : ''}

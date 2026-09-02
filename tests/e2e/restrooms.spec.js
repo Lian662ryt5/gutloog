@@ -59,6 +59,42 @@ test.describe('restroom saving', () => {
     await expect(page.locator('#restList .rest-card')).toHaveCount(1); // dismissed, so still there
   });
 
+  test('the delete button only shows on spots the current user owns, not spots saved by others', async ({ page }) => {
+    // The DB's own RLS policy only allows an owner or admin to delete a
+    // restroom row - showing the button on someone else's spot would let a
+    // user click a "delete" that silently no-ops server-side while the
+    // client optimistically removed it from view, making it look deleted
+    // until the next reload brought it back. The button must track that
+    // same owner-or-admin rule, not render unconditionally.
+    const restrooms = [
+      { id: 1, user_id: 'test-user', name: 'My Own Spot', loc: '', lat: null, lng: null, photo: null, clean: 3, flags: [], note: '', report_count: 0, hidden: false },
+      { id: 2, user_id: 'other-user', name: "Someone Else's Spot", loc: '', lat: null, lng: null, photo: null, clean: 3, flags: [], note: '', report_count: 0, hidden: false },
+    ];
+    await mockSupabase(page, { restrooms });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="restrooms"]');
+    await expect(page.locator('#restList .rest-card')).toHaveCount(2, { timeout: 5000 });
+
+    const ownCard = page.locator('.rest-card', { hasText: 'My Own Spot' });
+    const othersCard = page.locator('.rest-card', { hasText: "Someone Else's Spot" });
+    await expect(ownCard.locator('.del-btn')).toHaveCount(1);
+    await expect(othersCard.locator('.del-btn')).toHaveCount(0);
+  });
+
+  test('an admin sees the delete button on every spot, including ones they don\'t own', async ({ page }) => {
+    const restrooms = [
+      { id: 1, user_id: 'other-user', name: "Someone Else's Spot", loc: '', lat: null, lng: null, photo: null, clean: 3, flags: [], note: '', report_count: 0, hidden: false },
+    ];
+    const profiles = [{ id: 'test-user', is_admin: true }];
+    await mockSupabase(page, { restrooms, profiles });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="restrooms"]');
+    await expect(page.locator('#restList .rest-card')).toHaveCount(1, { timeout: 5000 });
+    await expect(page.locator('.rest-card .del-btn')).toHaveCount(1);
+  });
+
   test('the list paginates: first page is capped, Load more fetches the rest', async ({ page }) => {
     await mockSupabase(page, { restrooms: buildSeedRestrooms(25) });
     await page.goto('/index.html');
