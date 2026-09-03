@@ -15,6 +15,27 @@ test.describe('authentication & first-run flow', () => {
     expect(userId).toBe('test-user');
   });
 
+  test('a brand-new visitor with no session yet gets exactly one anonymous account, not one per loader', async ({ page }) => {
+    // init() (main.js) fires loadEntries/loadRestrooms/loadProfileTier/
+    // loadReminderSettings without awaiting each other, and each calls
+    // ensureAuth() independently. Regression for a real race: on a
+    // brand-new visitor (no session yet), all four would otherwise see
+    // getSession() resolve empty before any signInAnonymously() call
+    // finished, and each would sign in on its own - creating multiple
+    // distinct anonymous accounts and splitting that first load's data
+    // across them. ensureAuth() now memoizes the in-flight promise so
+    // concurrent callers share one auth resolution.
+    await mockSupabase(page);
+    await page.addInitScript(() => { window.__startWithNoSession = true; });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.waitForFunction(() => window.__signInAnonymouslyCalls > 0);
+    // Give any still-settling loaders a moment to finish so a second,
+    // late signInAnonymously call (if the bug were present) has time to happen.
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.__signInAnonymouslyCalls)).toBe(1);
+  });
+
   test('consent gate blocks the app until accepted, then hides', async ({ page }) => {
     await mockSupabase(page);
     await page.goto('/index.html');

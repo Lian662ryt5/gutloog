@@ -479,6 +479,7 @@
   }
   .tabbtn{
     flex:1;
+    min-width:0;
     border:none;
     background:none;
     padding:12px 4px;
@@ -944,7 +945,7 @@
   }
   .profile-id{min-width:0;flex:1;}
   .profile-username-row{display:flex;align-items:center;gap:6px;}
-  .profile-username{font-family:Georgia,'Source Serif',serif;font-weight:700;font-size:17px;color:var(--teal-deep);}
+  .profile-username{font-family:Georgia,'Source Serif',serif;font-weight:700;font-size:17px;color:var(--teal-deep);min-width:0;overflow-wrap:anywhere;}
   .username-edit-btn{background:none;border:none;font-size:12px;cursor:pointer;padding:2px;opacity:.7;}
   .profile-join-date{font-size:11px;color:var(--ink-soft);margin:2px 0 8px;}
   .username-edit-row{display:flex;gap:8px;margin-bottom:14px;}

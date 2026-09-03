@@ -34,6 +34,33 @@ test.describe('food tracking', () => {
     expect(alertMessage).toBeTruthy();
   });
 
+  test('an offline food save with a photo attached queues without a misleading upload-failure alert', async ({ page }) => {
+    // Regression: saveFoodEntry() used to attempt the photo upload
+    // unconditionally, so going offline with a photo attached triggered
+    // both a "Could not upload your photo" alert (implying a real error)
+    // and the "Saved offline" toast for the same save - contradictory
+    // messaging for what is actually expected offline behavior. The photo
+    // upload is now skipped up front while offline.
+    const PNG_1PX = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64'
+    );
+    await page.setInputFiles('#foodPhotoInput', { name: 'meal.png', mimeType: 'image/png', buffer: PNG_1PX });
+    await expect(page.locator('#foodPhotoPreview')).toBeVisible();
+
+    await page.context().setOffline(true);
+    let alertFired = false;
+    page.once('dialog', async (d) => { alertFired = true; await d.accept(); });
+    await page.fill('#foodNameInput', 'Offline Snack');
+    await page.click('#foodManualBtn');
+    await expect(page.locator('.toast')).toHaveText('Saved offline. Will sync when connection is restored.');
+    expect(alertFired).toBe(false);
+    await expect(page.locator('#logList .log-entry').first()).toContainText('Offline Snack');
+    await expect(page.locator('#logList .log-entry').first()).toContainText('Pending sync');
+
+    await page.context().setOffline(false);
+  });
+
   test('food entries are excluded from the Bristol weekly stats (avg type / flagged)', async ({ page }) => {
     await page.fill('#foodNameInput', 'Toast');
     await page.click('#foodManualBtn');

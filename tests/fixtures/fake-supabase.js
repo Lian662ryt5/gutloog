@@ -168,18 +168,38 @@
       return builder;
     }
 
+    // Normally a session exists from the very first getSession() call, like a
+    // returning visitor. Tests of the cold-start (brand-new visitor, no
+    // session yet) path set window.__startWithNoSession before the app
+    // loads, so getSession() starts null until signInAnonymously() is
+    // called - letting a test catch multiple concurrent callers each
+    // creating their own anonymous session (window.__signInAnonymouslyCalls
+    // counts real calls, not cache hits).
+    let currentSession = window.__startWithNoSession ? null : { user: { id: 'test-user' }, access_token: 'test' };
+    window.__signInAnonymouslyCalls = 0;
     return {
       createClient: () => ({
         auth: {
-          getSession: async () => ({ data: { session: { user: { id: 'test-user' }, access_token: 'test' } } }),
-          signInAnonymously: async () => ({ data: { session: { user: { id: 'test-user' }, access_token: 'test' } }, error: null }),
+          getSession: async () => ({ data: { session: currentSession } }),
+          signInAnonymously: async () => {
+            window.__signInAnonymouslyCalls++;
+            currentSession = { user: { id: 'test-user' }, access_token: 'test' };
+            return { data: { session: currentSession }, error: null };
+          },
           getUser: async () => ({ data: { user: { id: 'test-user' } } }),
           updateUser: async () => ({ error: null }),
         },
         from: (t) => query(t),
         storage: {
           from: () => ({
-            upload: async () => ({ error: null }),
+            // Real storage.upload() is a network call, so it should fail
+            // like one when the browser is offline - unlike this in-memory
+            // mock, which would otherwise "succeed" no matter what
+            // page.context().setOffline() says.
+            upload: async () => {
+              if (!navigator.onLine) return { error: { message: 'Failed to fetch' } };
+              return { error: null };
+            },
             getPublicUrl: () => ({ data: { publicUrl: 'https://example.test/fake-photo.jpg' } }),
           }),
         },

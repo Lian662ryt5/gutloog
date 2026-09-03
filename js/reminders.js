@@ -180,6 +180,19 @@ function bindReminderEvents(){
 }
 
 async function saveReminderSettings(){
+  // The scheduler (send-reminders) only fires water reminders while
+  // start <= now <= end on the same calendar day - an overnight range
+  // (e.g. 22:00-02:00) can be entered here with no error, but would then
+  // never match on either day and silently never fire, with "Reminders
+  // saved" implying it worked. Block that combination up front instead.
+  if(reminderSettings.water_enabled){
+    const [sh, sm] = String(reminderSettings.water_start_time || '09:00').split(':').map(Number);
+    const [eh, em] = String(reminderSettings.water_end_time || '21:00').split(':').map(Number);
+    if(eh*60+em <= sh*60+sm){
+      alert('Water reminders: the end time must be after the start time (overnight ranges aren\'t supported yet).');
+      return;
+    }
+  }
   const saveBtn = document.getElementById('saveRemindersBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
   try{
