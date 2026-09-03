@@ -67,4 +67,24 @@ test.describe('trends', () => {
     await passConsentAndOnboarding(page);
     await expect(page.locator('#insightsList')).toContainText('Log a few more entries');
   });
+
+  test('Quick Repeat queues offline instead of losing the entry when there is no connection', async ({ page }) => {
+    // Previously this button had no offline fallback at all (unlike the
+    // main Log form and food logging, which both queue via IndexedDB) -
+    // tapping it offline just alerted "check your connection" and the
+    // entry was gone, even though the app is otherwise offline-first.
+    await mockSupabase(page, { entries: buildSeedEntries() });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="log"]');
+    await expect(page.locator('#quickRepeatBtn')).toBeVisible({ timeout: 5000 });
+
+    await page.context().setOffline(true);
+    await page.click('#quickRepeatBtn');
+
+    await expect(page.locator('#logList .log-entry').first()).toContainText('Pending sync', { timeout: 3000 });
+    await expect(page.locator('body')).toContainText('Saved offline', { timeout: 3000 });
+
+    await page.context().setOffline(false);
+  });
 });

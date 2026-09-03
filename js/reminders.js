@@ -253,15 +253,31 @@ async function handleReminderUrlParams(){
 
     if(quicklog === 'medication' || quicklog === 'water'){
       // These need no extra input from the user - a bare timestamp is a
-      // complete, meaningful log entry on its own.
+      // complete, meaningful log entry on its own. Mirrors the same
+      // offline-queue fallback the Log tab's own save button uses, so a
+      // notification tap made while offline isn't silently lost.
       const meta = KIND_META[quicklog];
       const row = { ts: new Date().toISOString(), kind: quicklog, note: '' };
-      const { data, error } = await sb.from('entries').insert(row).select().single();
-      if(!error){
+      try{
+        if(!navigator.onLine) throw new Error('offline');
+        const { data, error } = await sb.from('entries').insert(row).select().single();
+        if(error) throw error;
         entries.unshift(rowToEntry(data));
-        render();
         showToast(`${meta ? meta.label : quicklog} logged.`);
+      }catch(e){
+        if(isNetworkError(e)){
+          const localId = await queueOfflineEntry(row);
+          const localEntry = rowToEntry(row);
+          localEntry.localId = localId;
+          localEntry.pendingSync = true;
+          entries.unshift(localEntry);
+          showToast('Saved offline. Will sync when connection is restored.');
+        } else {
+          console.error('reminder quicklog failed', e);
+          showToast('Could not log — check your connection and try from the app.');
+        }
       }
+      render();
     } else if(quicklog === 'toilet' || quicklog === 'symptoms' || quicklog === 'meals'){
       // These need real input (a Bristol type, or a food name) that can't be
       // filled in blindly - open the Log tab instead of inserting an empty row.

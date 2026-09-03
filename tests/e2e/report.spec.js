@@ -99,6 +99,53 @@ test.describe('doctor report (PDF export)', () => {
 
 });
 
+test.describe('doctor report - timezone-sensitive date defaults', () => {
+  // Sydney is UTC+10 in June (non-DST). At local 01:00 on the 15th, UTC is
+  // still 15:00 on the 14th - toISOString().slice(0,10) would report "today"
+  // as the 14th, one day behind the user's actual local calendar date. Any
+  // entry logged in that window (like "just now") would be silently
+  // excluded from the report's default date range.
+  test.use({ timezoneId: 'Australia/Sydney' });
+
+  test('the "today" date used for report presets is the local calendar date, not UTC', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-06-14T15:00:00.000Z')); // local 2026-06-15T01:00:00+10:00
+    await mockSupabase(page, { entries: [] });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+
+    const today = await page.evaluate(() => todayIsoDate());
+    expect(today).toBe('2026-06-15');
+  });
+
+  test('an entry logged moments ago (local "today") is included in a report generated right after, even though UTC is still yesterday', async ({ page }) => {
+    const nowIso = '2026-06-14T15:00:00.000Z'; // local 2026-06-15T01:00:00+10:00
+    await page.clock.setFixedTime(new Date(nowIso));
+    await mockSupabase(page, {
+      entries: [{
+        id: 1, user_id: 'test-user', ts: nowIso, kind: 'stool',
+        type: 4, tags: ['urgent'], pain: 2, rest_id: null, rest_name: null, note: 'Logged right after midnight',
+      }],
+    });
+    await mockJsPDF(page);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="trends"]');
+
+    // Default preset (90 days) auto-fills on load; generate immediately,
+    // the same way a user would moments after logging.
+    await page.click('#generateReportBtn');
+    await expect(page.locator('#reportStatus')).toContainText('Report downloaded.', { timeout: 5000 });
+
+    const text = (await page.evaluate(() => window.__lastPdf.text)).join('\n');
+    expect(text).toContain('Logged right after midnight');
+    // June 15, 2026 is a local Monday in Sydney, so the weekly-trend table
+    // should label this entry's week "Jun 15", not "Jun 14" (the previous
+    // UTC calendar day the old toISOString()-based key would have produced).
+    expect(text).toContain('Jun 15');
+    expect(text).not.toContain('Jun 14');
+  });
+});
+
 test.describe('doctor report - long medication log', () => {
   test('a long medication log spans multiple PDF pages', async ({ page }) => {
     const entries = buildSeed().concat(
