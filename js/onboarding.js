@@ -16,6 +16,7 @@ const ONBOARDING_STEPS = [
   { icon:'⭐', title:'Go further with Premium', body:"Unlock premium themes and support the app's development, whenever you're ready." }
 ];
 let onboardingStep = 0;
+let onboardingFocusTrapped = false;
 
 function showOnboardingIfNeeded(){
   if(localStorage.getItem(ONBOARDING_KEY) === 'true') return;
@@ -26,6 +27,8 @@ function showOnboardingIfNeeded(){
   onboardingStep = 0;
   renderOnboardingStep();
   gate.classList.remove('hidden');
+  if(!onboardingFocusTrapped){ trapFocusWithin(gate); onboardingFocusTrapped = true; }
+  document.getElementById('onboardingSkipBtn').focus();
 }
 
 function renderOnboardingStep(){
