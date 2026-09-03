@@ -46,6 +46,30 @@ test.describe('reminders', () => {
     expect(new URL(page.url()).search).toBe('');
   });
 
+  test('a "Log now" deep link while offline queues the entry instead of silently dropping it', async ({ page }) => {
+    // Previously this path had no error handling at all: a failed insert
+    // (including the always-fails-while-offline case) just did nothing -
+    // no toast, no alert, no offline queue - so a notification tap made
+    // without a connection lost the log entirely with zero user feedback.
+    await mockSupabase(page);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    // Navigating while offline would fail before the app ever loads, so go
+    // offline only after the page is up, then invoke the same handler a
+    // real quicklog URL would trigger at load.
+    await page.context().setOffline(true);
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '?quicklog=medication');
+      return handleReminderUrlParams();
+    });
+
+    await expect(page.locator('#logList .log-entry').first()).toContainText('Medication', { timeout: 3000 });
+    await expect(page.locator('#logList .log-entry').first()).toContainText('Pending sync');
+    await expect(page.locator('body')).toContainText('Saved offline', { timeout: 3000 });
+
+    await page.context().setOffline(false);
+  });
+
   test('a "Log now" deep link for toilet/symptoms/meals opens the Log tab instead of a blind insert', async ({ page }) => {
     await mockSupabase(page);
     await page.goto('/index.html?quicklog=toilet');

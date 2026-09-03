@@ -96,7 +96,13 @@ function computeReportData(rows, fromDate, toDate){
     const day = d.getDay();
     const diffToMonday = (day===0 ? -6 : 1-day);
     const weekStart = new Date(d); weekStart.setHours(0,0,0,0); weekStart.setDate(d.getDate()+diffToMonday);
-    const key = weekStart.toISOString().slice(0,10);
+    // Local calendar date, not toISOString() (UTC) - see localIsoDate's own
+    // comment. weekStart is already local midnight Monday; converting it to
+    // UTC before slicing would roll it back to Sunday's date for any
+    // positive-UTC-offset timezone, mislabeling the week by one day (the
+    // grouping itself stays correct since every entry in the same local
+    // week produces the same key either way - only the printed label was wrong).
+    const key = localIsoDate(weekStart);
     if(!weekMap.has(key)) weekMap.set(key, []);
     weekMap.get(key).push(e);
   });
@@ -395,11 +401,22 @@ async function generateDoctorReportPDF(fromDate, toDate){
 }
 
 /* ---- UI wiring ---- */
+// Local calendar date, not toISOString().slice(0,10) - that's UTC, which
+// for anyone east of UTC (roughly UTC+1 through UTC+12) during the hours
+// between local midnight and UTC's date rollover would return yesterday's
+// date as "today". That date string becomes this report's `to` boundary
+// (fetchEntriesForReport interprets it as local end-of-day), so the bug
+// silently excluded a user's own same-day entries from the PDF for a large
+// part of the world for part of every day. Matches the local-date pattern
+// already used elsewhere (e.g. reminders.js's handleReminderUrlParams).
+function localIsoDate(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function isoDateNDaysAgo(n){
   const d = new Date(); d.setDate(d.getDate()-n);
-  return d.toISOString().slice(0,10);
+  return localIsoDate(d);
 }
-function todayIsoDate(){ return new Date().toISOString().slice(0,10); }
+function todayIsoDate(){ return localIsoDate(new Date()); }
 
 function setReportPreset(days){
   const fromEl = document.getElementById('reportFromInput');

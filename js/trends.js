@@ -215,11 +215,27 @@ function renderQuickRepeat(){
     };
     let savedOnline = false;
     try{
+      if(!navigator.onLine) throw new Error('offline');
       const { data, error } = await sb.from('entries').insert(row).select().single();
       if(error) throw error;
       entries.unshift(rowToEntry(data));
       savedOnline = true;
-    }catch(e){ console.error('quick repeat failed', e); alert('Could not save — check your connection.'); }
+      showToast(`Type ${row.type} entry saved.`);
+    }catch(e){
+      if(isNetworkError(e)){
+        const localId = await queueOfflineEntry(row);
+        const localEntry = rowToEntry(row);
+        localEntry.localId = localId;
+        localEntry.pendingSync = true;
+        entries.unshift(localEntry);
+        showToast('Saved offline. Will sync when connection is restored.');
+      } else {
+        console.error('quick repeat failed', e);
+        alert('Could not save — check your connection.');
+        btn.disabled = false; btn.textContent = '↻ Log it now';
+        return;
+      }
+    }
     render();
     if(savedOnline){ loadAccountStats(); loadTrendsData(); }
   });

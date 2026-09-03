@@ -1,13 +1,13 @@
 /* ---- Gut Log service worker: app-shell caching only ----
    Caches the static shell (HTML/CSS/JS/icons/manifest) so the app opens
    instantly and works offline. Never touches Supabase or Open Food Facts
-   requests - those always go straight to the network so the app never
+   API requests - those always go straight to the network so the app never
    shows stale health data as if it were live. Data written while offline
    is handled separately by the IndexedDB queue in js/offline-queue.js.
 
    Bump CACHE_VERSION whenever the shell file list below changes, so
    returning visitors pick up the new files instead of a stale cache. */
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `gutlog-shell-${CACHE_VERSION}`;
 
 const SHELL_FILES = [
@@ -39,10 +39,32 @@ const SHELL_FILES = [
   'js/main.js'
 ];
 
+// The Supabase SDK is loaded eagerly on every page load (index.html's own
+// <script> tag, not lazy like jsPDF) and the app can't do anything without
+// it - so it's effectively part of the shell too, even though it's
+// cross-origin and isShellRequest() below intentionally never intercepts
+// it (Supabase's own API calls must always go to the network live). Without
+// this, a genuinely offline launch depended entirely on the browser's own
+// opportunistic HTTP cache for this script, which isn't guaranteed to
+// survive cache eviction - a real gap in the "offline-first" promise.
+// jsPDF is deliberately NOT included here: it's lazy-loaded only when a
+// report is generated specifically so most visitors never pay for it,
+// and precaching it here would silently undo that.
+const CDN_SHELL_FILES = [
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+];
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(SHELL_FILES))
+      .then(cache => cache.addAll(SHELL_FILES).then(() =>
+        // Best-effort: a CDN hiccup or CORS surprise here must never fail
+        // the whole install (that would break the app shell too), so each
+        // one is caught independently rather than passed to Promise.all.
+        Promise.all(CDN_SHELL_FILES.map(url =>
+          cache.add(url).catch(err => console.error('SW: could not precache', url, err))
+        ))
+      ))
       .then(() => self.skipWaiting())
   );
 });
@@ -59,9 +81,16 @@ self.addEventListener('activate', event => {
 });
 
 function isShellRequest(url){
-  // Same-origin GET requests only - anything cross-origin (Supabase REST/
-  // Auth/Storage, Open Food Facts) is left alone and goes straight to network.
-  return url.origin === self.location.origin;
+  // Same-origin GET requests, plus the one pinned CDN shell file above -
+  // everything else cross-origin (Supabase REST/Auth/Storage, Open Food
+  // Facts) is left alone and goes straight to network. caches.match() below
+  // matches by URL regardless of request mode, so this still serves the
+  // <script> tag's own (no-cors) request from the cors-mode copy cache.add()
+  // stored at install time - the runtime re-fetch that revalidates it in the
+  // background is itself no-cors/opaque and so can't refresh that cached
+  // copy further, but a possibly-slightly-stale cached SDK beats an app
+  // that can't boot at all when genuinely offline.
+  return url.origin === self.location.origin || CDN_SHELL_FILES.includes(url.href);
 }
 
 self.addEventListener('fetch', event => {
