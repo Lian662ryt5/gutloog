@@ -26,7 +26,8 @@ function longestStreak(tsList){
   const sorted = [...days].sort((a,b)=>a-b);
   let best = 0, run = 0, prev = null;
   sorted.forEach(t=>{
-    run = (prev !== null && t - prev === 86400000) ? run + 1 : 1;
+    // addLocalDays (profile.js), not a fixed 86400000ms - see its comment.
+    run = (prev !== null && t === addLocalDays(prev, 1)) ? run + 1 : 1;
     if(run > best) best = run;
     prev = t;
   });
