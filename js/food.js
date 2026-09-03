@@ -175,7 +175,11 @@ async function uploadFoodPhoto(blob){
 
 async function saveFoodEntry(f){
   let image = f.image || '';
-  if(attachedFoodPhotoBlob){
+  // Skip the attempt entirely while offline rather than let it fail and
+  // show a "could not upload" alert that implies a real error - it's
+  // expected, and the offline-save toast below already covers it. Online,
+  // a genuine failure still alerts so the user knows the photo was dropped.
+  if(attachedFoodPhotoBlob && navigator.onLine){
     try{
       image = await uploadFoodPhoto(attachedFoodPhotoBlob);
     }catch(e){

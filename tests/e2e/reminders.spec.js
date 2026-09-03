@@ -37,6 +37,29 @@ test.describe('reminders', () => {
     await expect(page.locator('#waterEndInput')).toBeVisible();
   });
 
+  test('an overnight water reminder window (end before start) is rejected, not silently saved', async ({ page }) => {
+    // The scheduler only fires water reminders while start <= now <= end on
+    // the same calendar day, so an end time before the start time would
+    // never match on either day - a silent, permanent no-op that "Reminders
+    // saved" would otherwise imply had worked.
+    await mockSupabase(page);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="profile"]');
+    await page.click('[data-remtoggle="water"]');
+    await page.fill('#waterStartInput', '22:00');
+    await page.fill('#waterEndInput', '02:00');
+
+    let alertMessage = null;
+    page.once('dialog', async (d) => { alertMessage = d.message(); await d.accept(); });
+    await page.click('#saveRemindersBtn');
+    await page.waitForTimeout(300);
+
+    expect(alertMessage).toContain('end time must be after the start time');
+    const saved = await page.evaluate(() => window.__fakeTables.reminder_settings.length);
+    expect(saved).toBe(0);
+  });
+
   test('a "Log now" deep link for medication inserts an entry with no extra input needed', async ({ page }) => {
     await mockSupabase(page);
     await page.goto('/index.html?quicklog=medication');

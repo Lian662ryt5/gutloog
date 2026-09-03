@@ -49,11 +49,27 @@ const SUPABASE_URL = 'https://iftxfnhwdyqzllzmjoca.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Mf-INKOUbWP12FQnW8bQrA_b_zJoZXh';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+// init() below fires several loaders (loadEntries, loadRestrooms,
+// loadProfileTier, loadReminderSettings) without awaiting each other, so on
+// a brand-new visitor with no session yet, they'd otherwise all see
+// getSession() resolve empty at once and each call signInAnonymously()
+// independently - creating multiple distinct anonymous accounts and
+// splitting that first load's data across them. Memoizing the in-flight
+// promise makes concurrent callers share a single auth resolution.
+let ensureAuthPromise = null;
 async function ensureAuth(){
-  const { data: { session } } = await sb.auth.getSession();
-  if(session) return session;
-  const { data, error } = await sb.auth.signInAnonymously();
-  if(error){ console.error('Anonymous sign-in failed', error); return null; }
-  return data.session;
+  if(ensureAuthPromise) return ensureAuthPromise;
+  ensureAuthPromise = (async ()=>{
+    const { data: { session } } = await sb.auth.getSession();
+    if(session) return session;
+    const { data, error } = await sb.auth.signInAnonymously();
+    if(error){ console.error('Anonymous sign-in failed', error); return null; }
+    return data.session;
+  })();
+  try{
+    return await ensureAuthPromise;
+  } finally {
+    ensureAuthPromise = null;
+  }
 }
 
