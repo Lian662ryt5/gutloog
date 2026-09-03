@@ -14,16 +14,31 @@ function localDaySet(tsList){
   return days;
 }
 
+// Steps a local-midnight epoch by whole calendar days via setDate(), not by
+// adding/subtracting a fixed 86400000ms - a local day isn't always exactly
+// 24h. On a DST "spring forward" day it's 23h (82800000ms) and on "fall
+// back" it's 25h (90000000ms), so two genuinely-consecutive calendar days
+// spanning that transition differ by neither fixed amount. The same
+// server-side date-math bug was already found and fixed once this session
+// (the send-reminders edge function's localDateStartInstantUTC) - this
+// closes the identical gap here, which was undercounting/breaking a user's
+// streak on the two DST-transition days every year.
+function addLocalDays(epochMs, delta){
+  const d = new Date(epochMs);
+  d.setDate(d.getDate() + delta);
+  return d.getTime();
+}
+
 function currentStreak(tsList){
   const days = localDaySet(tsList);
   const today = new Date(); today.setHours(0,0,0,0);
   let cursor = today.getTime();
   if(!days.has(cursor)){
-    cursor -= 86400000;
+    cursor = addLocalDays(cursor, -1);
     if(!days.has(cursor)) return 0;
   }
   let count = 0;
-  while(days.has(cursor)){ count++; cursor -= 86400000; }
+  while(days.has(cursor)){ count++; cursor = addLocalDays(cursor, -1); }
   return count;
 }
 
