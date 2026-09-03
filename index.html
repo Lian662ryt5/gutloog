@@ -16,9 +16,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="consent-gate" id="consentGate">
+<div class="consent-gate" id="consentGate" role="dialog" aria-modal="true" aria-labelledby="consentGateTitle">
   <div class="consent-gate-card">
-    <h2>Before you start</h2>
+    <h2 id="consentGateTitle">Before you start</h2>
     <p>Gut Log stores your symptom, food, and restroom data securely so it's there when you need it. Restroom spots you save (including photos) are visible to other users. Please read our <a href="terms.html" target="_blank">Terms & Conditions</a> and <a href="privacy.html" target="_blank">Privacy Policy</a> — they cover anonymous sign-in, premium subscriptions, and how your data (including health data) is used.</p>
     <label class="consent-check">
       <input type="checkbox" id="consentCheckbox">
@@ -27,7 +27,7 @@
     <button class="save-btn" id="consentContinueBtn" disabled>Continue</button>
   </div>
 </div>
-<div class="onboarding-gate hidden" id="onboardingGate">
+<div class="onboarding-gate hidden" id="onboardingGate" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
   <div class="onboarding-card">
     <div class="onboarding-accent" aria-hidden="true"></div>
     <button class="onboarding-skip" id="onboardingSkipBtn" type="button">Skip</button>
