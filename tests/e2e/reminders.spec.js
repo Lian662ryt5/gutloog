@@ -122,6 +122,37 @@ test.describe('reminders', () => {
     expect(row.dismissed).toBe(true);
   });
 
+  test('turning off the last enabled reminder removes the stored push subscription, not just the local toggle', async ({ page }) => {
+    // privacy.html promises that "turning reminders off removes it" (the
+    // stored push subscription) - this only holds if disabling every
+    // reminder type actually deletes the push_subscriptions row, not just
+    // reminder_settings.*_enabled.
+    const FAKE_ENDPOINT = 'https://fcm.googleapis.com/fake/endpoint-123';
+    await mockSupabase(page, {
+      reminder_settings: [{ user_id: 'test-user', timezone: 'UTC', toilet_enabled: true, toilet_times: ['09:00'] }],
+      push_subscriptions: [{ id: 1, user_id: 'test-user', endpoint: FAKE_ENDPOINT, p256dh: 'x', auth_key: 'y' }],
+    });
+    await page.addInitScript((endpoint) => {
+      const fakeSub = { endpoint, unsubscribe: async () => true };
+      const fakeReg = { pushManager: { getSubscription: async () => fakeSub } };
+      Object.defineProperty(window.navigator.serviceWorker, 'ready', {
+        value: Promise.resolve(fakeReg),
+        configurable: true,
+      });
+    }, FAKE_ENDPOINT);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="profile"]');
+
+    await expect(page.locator('[data-remtoggle="toilet"]')).toBeChecked();
+    await page.click('[data-remtoggle="toilet"]');
+    await page.click('#saveRemindersBtn');
+    await expect(page.locator('body')).toContainText('Reminders saved.', { timeout: 3000 });
+
+    const subsLeft = await page.evaluate(() => window.__fakeTables.push_subscriptions.length);
+    expect(subsLeft).toBe(0);
+  });
+
   test('the home dashboard reminders snapshot reflects enabled types', async ({ page }) => {
     await mockSupabase(page, {
       reminder_settings: [{ user_id: 'test-user', timezone: 'UTC', medication_enabled: true, medication_times: ['09:00'] }],
