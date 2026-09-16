@@ -26,6 +26,36 @@ test.describe('mobile layout', () => {
     expect(await horizontalOverflowPx(page)).toBeLessThanOrEqual(1); // 1px tolerance for subpixel rounding
   });
 
+  test('long single-word tab labels are truncated with an ellipsis, not left to overlap into neighboring tabs', async ({ page }) => {
+    // Regression: fixing the overflow above (flex:1 + min-width:0) let
+    // .tabbtn shrink well below a single-word label's natural width, but
+    // with no white-space/overflow handling on the button itself, the text
+    // simply rendered past its own button's right edge into the
+    // neighboring tab instead of wrapping or clipping there - "Restrooms"
+    // and "Trends" visually overlapped into unreadable smashed-together
+    // text, even though the buttons' own boxes never overlapped.
+    await page.setViewportSize(NARROW_VIEWPORT);
+    await mockSupabase(page);
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+
+    const style = await page.evaluate(() => {
+      const cs = getComputedStyle(document.getElementById('tab-restrooms'));
+      return { overflowX: cs.overflowX, whiteSpace: cs.whiteSpace };
+    });
+    expect(style.overflowX).toBe('hidden');
+    expect(style.whiteSpace).toBe('nowrap');
+
+    // Positive check on real layout: adjacent tab buttons' own boxes never
+    // overlap either (independent of the text-clipping check above).
+    const rects = await page.evaluate(() =>
+      [...document.querySelectorAll('.tabbtn')].filter(b => !b.hidden).map(b => b.getBoundingClientRect().toJSON())
+    );
+    for (let i = 1; i < rects.length; i++) {
+      expect(rects[i].left).toBeGreaterThanOrEqual(rects[i - 1].right - 1); // 1px rounding tolerance
+    }
+  });
+
   test('a long, unbroken username does not cause horizontal page overflow', async ({ page }) => {
     // profiles.username is capped at 40 chars server-side (DB check
     // constraint) and client-side (maxlength=40), but nothing stops a
