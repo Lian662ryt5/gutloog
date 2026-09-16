@@ -228,10 +228,11 @@
     font-weight:600;
     cursor:pointer;
     margin-top:16px;
-    transition:background .15s;
+    transition:background .15s, transform .1s;
     -webkit-tap-highlight-color:transparent;
     touch-action:manipulation;
   }
+  .save-btn:active:not(:disabled){transform:scale(0.97);}
   .save-btn:disabled{background:var(--line);color:var(--ink-soft);cursor:not-allowed;}
   .log-entry{
     display:flex;
@@ -494,7 +495,11 @@
   }
   .tabbtn.active{background:var(--teal-deep);color:#fff;}
   .tabpage{display:none;}
-  .tabpage.active{display:block;}
+  .tabpage.active{display:block;animation:tabFadeIn .22s ease;}
+  @keyframes tabFadeIn{
+    from{opacity:0;transform:translateY(4px);}
+    to{opacity:1;transform:translateY(0);}
+  }
   .find-btn{
     width:100%;
     background:var(--teal-deep);
@@ -802,6 +807,11 @@
   .consent-gate-card{
     background:var(--surface);border-radius:16px;box-shadow:var(--shadow);
     padding:24px 22px;max-width:400px;width:100%;
+    animation:modalPopIn .25s cubic-bezier(.2,.9,.3,1.1);
+  }
+  @keyframes modalPopIn{
+    from{opacity:0;transform:scale(0.94) translateY(8px);}
+    to{opacity:1;transform:scale(1) translateY(0);}
   }
   .consent-gate-card h2{
     font-family:Georgia,'Source Serif',serif;font-size:19px;font-weight:600;
@@ -825,6 +835,7 @@
     background:var(--surface);border-radius:18px;box-shadow:var(--shadow);
     padding:36px 24px 24px;max-width:380px;width:100%;
     text-align:center;position:relative;overflow:hidden;
+    animation:modalPopIn .25s cubic-bezier(.2,.9,.3,1.1);
   }
   .onboarding-accent{
     position:absolute;top:0;left:0;right:0;height:5px;
@@ -850,6 +861,10 @@
   }
   @media (prefers-reduced-motion: reduce){
     .onboarding-content.step-in{animation:none;}
+    .tabpage.active{animation:none;}
+    .consent-gate-card, .onboarding-card{animation:none;}
+    .choice-card, .save-btn{transition:none;}
+    .choice-card:active, .save-btn:active:not(:disabled){transform:none;}
   }
   .onboarding-dots{display:flex;justify-content:center;gap:6px;margin-bottom:18px;}
   .onboarding-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:width .2s ease, background-color .2s ease;}
