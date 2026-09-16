@@ -97,6 +97,10 @@
     margin-bottom:16px;
     border:1px solid var(--line);
   }
+  /* Marks the single primary action on an otherwise-flat stack of equal
+     cards (currently just the Bristol scale entry on the Log tab) with the
+     app's existing teal accent, rather than introducing a new color. */
+  .card-primary{border-left:4px solid var(--teal);}
   .card h2{
     font-family:Georgia,'Source Serif',serif;
     font-size:15px;
@@ -277,6 +281,7 @@
     border:none;
     border-radius:10px;
     padding:13px;
+    min-height:44px;
     font-size:14px;
     font-weight:700;
     cursor:pointer;
@@ -297,12 +302,13 @@
     background:var(--paper);
     border-radius:10px;
     padding:11px 12px;
+    min-height:44px;
     font-size:16px;
   }
   .food-manual button{
     background:var(--teal-deep);
     color:#fff;border:none;border-radius:10px;
-    padding:0 18px;font-size:13px;font-weight:700;cursor:pointer;
+    padding:0 18px;min-height:44px;font-size:13px;font-weight:700;cursor:pointer;
   }
   .food-preview{
     display:none;
@@ -320,7 +326,7 @@
   .food-preview .fp-brand{font-size:12px;color:var(--ink-soft);}
   .food-preview .fp-actions{display:flex;gap:6px;flex-shrink:0;}
   .food-preview .fp-actions button{
-    border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;
+    border:none;border-radius:8px;padding:8px 12px;min-height:44px;font-size:12px;font-weight:700;cursor:pointer;
   }
   .fp-confirm{background:var(--teal-deep);color:#fff;}
   .fp-cancel{background:var(--surface);color:var(--ink-soft);border:1px solid var(--line) !important;}
@@ -354,7 +360,7 @@
   .scan-close{
     position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
     background:#fff;color:#222;border:none;
-    border-radius:20px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;
+    border-radius:20px;padding:9px 22px;min-height:44px;font-size:13px;font-weight:700;cursor:pointer;
   }
   .quick-repeat{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -370,7 +376,7 @@
   .quick-repeat span{font-size:11px;opacity:.8;}
   .quick-repeat button{
     background:var(--teal-deep);color:#fff;border:none;border-radius:8px;
-    padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;
+    padding:9px 14px;min-height:44px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;
   }
   .correlation-item{
     display:flex;justify-content:space-between;align-items:center;
@@ -397,11 +403,11 @@
   .email-banner .eb-title{font-weight:700;color:var(--ochre);margin-bottom:4px;}
   .email-banner .eb-row{display:flex;gap:8px;margin-top:8px;}
   .email-banner input{
-    flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:16px;
+    flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;min-height:44px;font-size:16px;
   }
   .email-banner button{
     background:var(--teal-deep);color:#fff;border:none;border-radius:8px;
-    padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;
+    padding:0 14px;min-height:44px;font-size:12px;font-weight:700;cursor:pointer;
   }
   .email-banner.done{background:var(--teal-soft);border-color:var(--teal);}
   .email-banner.done .eb-title{color:var(--teal-deep);}
@@ -409,7 +415,19 @@
     text-align:center;
     color:var(--ink-soft);
     font-size:13px;
-    padding:20px 0;
+    line-height:1.5;
+    padding:28px 16px;
+    max-width:280px;
+    margin:0 auto;
+  }
+  .empty::before{
+    content:'';
+    display:block;
+    width:36px;height:36px;
+    margin:0 auto 10px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1.5px dashed var(--line);
   }
   .day-header{
     font-size:11px;
@@ -451,6 +469,14 @@
     min-width:32px;min-height:32px;
     display:inline-flex;align-items:center;justify-content:center;
     flex-shrink:0;
+    position:relative;
+  }
+  /* Keeps the visible × small (matches the compact log-entry row it sits
+     in) while still giving it a real 44x44 tap target, via an invisible
+     expanded hit-area rather than growing the button itself. */
+  .del-btn::before{
+    content:'';position:absolute;top:50%;left:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%);
   }
   .foot-note{
     font-size:11px;
@@ -466,6 +492,7 @@
     color:var(--ink-soft);
     border-radius:8px;
     padding:8px 12px;
+    min-height:44px;
     font-size:12px;
     cursor:pointer;
   }
@@ -490,10 +517,22 @@
     color:var(--ink-soft);
     border-radius:9px;
     cursor:pointer;
+    text-align:center;
+    /* Single-word labels ("Restrooms") have no space to wrap at, so at
+       narrow widths - where flex:1 + min-width:0 lets these shrink well
+       below their text's natural width - the text would otherwise overflow
+       into neighboring tabs. A mid-word wrap avoids that but reads as
+       fragmented ("Rest/roo/ms"); a single-line ellipsis truncation, same
+       as a native tab bar, stays legible and keeps every tab the same
+       clean height. */
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     -webkit-tap-highlight-color:transparent;
     touch-action:manipulation;
   }
   .tabbtn.active{background:var(--teal-deep);color:#fff;}
+  @media(max-width:430px){
+    .tabbtn{font-size:11px;padding:12px 2px;}
+  }
   .tabpage{display:none;}
   .tabpage.active{display:block;animation:tabFadeIn .22s ease;}
   @keyframes tabFadeIn{
@@ -507,6 +546,7 @@
     border:none;
     border-radius:10px;
     padding:13px;
+    min-height:44px;
     font-size:14px;
     font-weight:600;
     cursor:pointer;
@@ -648,7 +688,8 @@
   .card-head-row h2{margin:0;}
   .text-link-btn{
     background:none;border:none;color:var(--teal-deep);
-    font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 2px;
+    font-size:12.5px;font-weight:700;cursor:pointer;
+    padding:6px 2px;min-height:44px;display:inline-flex;align-items:center;
   }
   .text-link-btn:hover{text-decoration:underline;}
   .recent-activity-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
@@ -667,7 +708,7 @@
   .dash-trend-bars{display:flex;align-items:flex-end;gap:6px;height:66px;margin-bottom:10px;}
   .dash-trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
   .dash-trend-flag-mark{display:block;height:11px;line-height:11px;font-size:10px;color:var(--brick);text-align:center;}
-  .dash-trend-bar{width:100%;background:var(--teal);border-radius:3px 3px 0 0;min-height:2px;}
+  .dash-trend-bar{width:100%;background:var(--teal);border-radius:3px 3px 0 0;min-height:2px;transition:height .3s ease;}
   .dash-trend-bar.flag{background:var(--brick);}
   .dash-trend-summary{font-size:12.5px;color:var(--ink-soft);}
 
@@ -698,6 +739,7 @@
     color:var(--teal-deep);
     border-radius:10px;
     padding:0 12px;
+    min-height:44px;
     font-size:12px;
     font-weight:600;
     cursor:pointer;
@@ -715,7 +757,7 @@
   }
   .consent-panel .cbtns{display:flex;gap:8px;margin-top:10px;}
   .consent-panel button{
-    border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;
+    border:none;border-radius:8px;padding:8px 14px;min-height:44px;font-size:12px;font-weight:600;cursor:pointer;
   }
   .consent-panel .allow{background:var(--teal-deep);color:#fff;}
   .consent-panel .cancel{background:none;color:var(--teal-deep);text-decoration:underline;}
@@ -731,6 +773,7 @@
     color:var(--ink-soft);
     border-radius:10px;
     padding:10px;
+    min-height:44px;
     width:100%;
     font-size:12px;
     cursor:pointer;
@@ -761,30 +804,31 @@
   .nearby-card .ndist{font-size:12px;color:var(--teal-deep);font-weight:700;white-space:nowrap;}
   .report-btn{
     background:none;border:none;color:var(--ink-soft);font-size:10px;
-    text-decoration:underline;cursor:pointer;padding:2px 0;
+    text-decoration:underline;cursor:pointer;
+    padding:2px 0;min-height:44px;display:inline-flex;align-items:center;
   }
   .rest-card .rfoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
   .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
   .filter-row select, .filter-row input{
     flex:1;min-width:120px;border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;
-    font-size:16px;background:var(--paper);color:var(--ink);font-family:inherit;
+    min-height:44px;font-size:16px;background:var(--paper);color:var(--ink);font-family:inherit;
   }
   .filter-row button{flex:0 0 auto;}
   .rest-select{
     width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;
-    font-family:inherit;font-size:16px;background:var(--paper);color:var(--ink);margin-bottom:10px;
+    min-height:44px;font-family:inherit;font-size:16px;background:var(--paper);color:var(--ink);margin-bottom:10px;
   }
   .rest-linked-tag{background:var(--teal-soft);color:var(--teal-deep);border-color:var(--teal-soft);}
   .trend-tabs{display:flex;gap:6px;margin-bottom:14px;}
   .trend-tabs button{
     flex:1;border:1.5px solid var(--line);background:var(--paper);color:var(--ink-soft);
-    border-radius:9px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;
+    border-radius:9px;padding:7px;min-height:44px;font-size:12px;font-weight:600;cursor:pointer;
   }
   .trend-tabs button.active{background:var(--teal-deep);color:#fff;border-color:var(--teal-deep);}
   .trend-bars{display:flex;align-items:flex-end;gap:4px;height:122px;margin-bottom:6px;}
   .trend-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
   .trend-flag-mark{display:block;height:13px;line-height:13px;font-size:11px;color:var(--brick);text-align:center;}
-  .trend-bar{width:100%;background:var(--teal);border-radius:3px 3px 0 0;min-height:2px;}
+  .trend-bar{width:100%;background:var(--teal);border-radius:3px 3px 0 0;min-height:2px;transition:height .3s ease;}
   .trend-bar.flag{background:var(--brick);}
   .trend-labels{display:flex;gap:4px;}
   .trend-labels span{flex:1;text-align:center;font-size:9px;color:var(--ink-soft);}
@@ -821,7 +865,7 @@
   .consent-gate-card p a{color:var(--teal-deep);font-weight:600;}
   .consent-check{
     display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--ink);
-    margin-bottom:16px;cursor:pointer;line-height:1.4;
+    margin-bottom:16px;cursor:pointer;line-height:1.4;min-height:44px;
   }
   .consent-check input{margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--teal-deep);}
   .onboarding-gate{
@@ -843,7 +887,8 @@
   }
   .onboarding-skip{
     position:absolute;top:16px;right:14px;
-    background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;padding:4px 8px;
+    background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;
+    padding:4px 8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;
   }
   .onboarding-icon-badge{
     width:76px;height:76px;border-radius:50%;
@@ -865,6 +910,7 @@
     .consent-gate-card, .onboarding-card{animation:none;}
     .choice-card, .save-btn{transition:none;}
     .choice-card:active, .save-btn:active:not(:disabled){transform:none;}
+    .dash-trend-bar, .trend-bar{transition:none;}
   }
   .onboarding-dots{display:flex;justify-content:center;gap:6px;margin-bottom:18px;}
   .onboarding-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:width .2s ease, background-color .2s ease;}
@@ -907,7 +953,7 @@
   }
   .theme-upgrade-banner button{
     background:var(--teal-deep);color:#fff;border:none;border-radius:8px;
-    padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;
+    padding:8px 14px;min-height:44px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;
   }
   .badge-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   @media(max-width:420px){.badge-grid{grid-template-columns:1fr;}}
@@ -958,14 +1004,26 @@
     color:#fff;font-size:12px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;padding:0;
   }
+  /* Same expanded-hit-area pattern as .del-btn - keeps the small circular
+     badge look while reaching a real 44x44 tap target. */
+  .avatar-edit-btn::before{
+    content:'';position:absolute;top:50%;left:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%);
+  }
   .profile-id{min-width:0;flex:1;}
   .profile-username-row{display:flex;align-items:center;gap:6px;}
   .profile-username{font-family:Georgia,'Source Serif',serif;font-weight:700;font-size:17px;color:var(--teal-deep);min-width:0;overflow-wrap:anywhere;}
-  .username-edit-btn{background:none;border:none;font-size:12px;cursor:pointer;padding:2px;opacity:.7;}
+  .username-edit-btn{background:none;border:none;font-size:12px;cursor:pointer;padding:2px;opacity:.7;position:relative;}
+  /* Same expanded-hit-area pattern as .del-btn - keeps the small inline
+     pencil icon while reaching a real 44x44 tap target. */
+  .username-edit-btn::before{
+    content:'';position:absolute;top:50%;left:50%;
+    width:44px;height:44px;transform:translate(-50%,-50%);
+  }
   .profile-join-date{font-size:11px;color:var(--ink-soft);margin:2px 0 8px;}
   .username-edit-row{display:flex;gap:8px;margin-bottom:14px;}
-  .username-edit-row input{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:16px;background:var(--paper);color:var(--ink);}
-  .username-edit-row button{border:none;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;}
+  .username-edit-row input{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;min-height:44px;font-size:16px;background:var(--paper);color:var(--ink);}
+  .username-edit-row button{border:none;border-radius:8px;padding:0 14px;min-height:44px;font-size:12px;font-weight:700;cursor:pointer;}
   .username-save-btn{background:var(--teal-deep);color:#fff;}
   .username-cancel-btn{background:var(--paper);color:var(--ink-soft);border:1px solid var(--line) !important;}
   .progress-ring-row{display:flex;align-items:center;gap:18px;}
@@ -999,7 +1057,7 @@
   .admin-reports .areport:first-child{border-top:none;}
   .admin-actions{display:flex;gap:8px;margin-top:12px;}
   .admin-actions button{
-    flex:1;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;
+    flex:1;border:none;border-radius:9px;padding:10px;min-height:44px;font-size:13px;font-weight:600;cursor:pointer;
   }
   .admin-actions .approve-btn{background:var(--teal-deep);color:#fff;}
   .admin-actions .remove-btn{background:var(--brick-soft);color:var(--brick);}
@@ -1013,13 +1071,13 @@
   }
   .reminder-type-row{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;}
   .reminder-type-row:last-child{margin-bottom:0;}
-  .reminder-type-toggle{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;}
+  .reminder-type-toggle{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;}
   .reminder-type-toggle input{width:18px;height:18px;flex-shrink:0;accent-color:var(--teal-deep);}
   .reminder-type-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
   .reminder-time-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-  .reminder-time-row input[type="time"]{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;background:var(--surface);color:var(--ink);}
+  .reminder-time-row input[type="time"]{flex:1;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;min-height:44px;font-size:14px;background:var(--surface);color:var(--ink);}
   .reminder-interval-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:13px;color:var(--ink-soft);align-items:center;}
-  .reminder-interval-row select, .reminder-interval-row input[type="time"]{border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px;background:var(--surface);color:var(--ink);margin-left:4px;}
+  .reminder-interval-row select, .reminder-interval-row input[type="time"]{border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;min-height:44px;font-size:13px;background:var(--surface);color:var(--ink);margin-left:4px;}
   .remMessage{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;margin-top:2px;background:var(--surface);color:var(--ink);}
   .plan-badge.free{background:var(--paper);color:var(--ink-soft);border:1px solid var(--line);}
   .pricing-grid{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
@@ -1038,7 +1096,7 @@
   .plan-card .pc-price b{color:var(--ink);font-family:'Courier New',monospace;}
   .plan-card button{
     background:var(--teal-deep);color:#fff;border:none;border-radius:9px;
-    padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;
+    padding:10px 16px;min-height:44px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;
   }
   .plan-card button:disabled{background:var(--line);color:var(--ink-soft);cursor:default;}
   .plan-card.current{border-color:var(--teal);background:var(--teal-soft);}
