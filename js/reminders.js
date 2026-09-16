@@ -179,6 +179,25 @@ function bindReminderEvents(){
   if(saveBtn) saveBtn.addEventListener('click', saveReminderSettings);
 }
 
+// privacy.html promises that turning reminders off removes the stored push
+// subscription - without this, enablePushNotifications() only ever upserts
+// the row, so it would otherwise sit in push_subscriptions indefinitely
+// after every reminder type is disabled.
+async function removePushSubscriptionIfNoRemindersEnabled(){
+  const anyEnabled = REMINDER_TYPES.some(t => reminderSettings[`${t.key}_enabled`]);
+  if(anyEnabled || !('serviceWorker' in navigator)) return;
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if(!sub) return;
+    const endpoint = sub.endpoint;
+    await sub.unsubscribe();
+    await sb.from('push_subscriptions').delete().eq('endpoint', endpoint);
+  }catch(e){
+    console.error('remove push subscription failed', e);
+  }
+}
+
 async function saveReminderSettings(){
   // The scheduler (send-reminders) only fires water reminders while
   // start <= now <= end on the same calendar day - an overnight range
@@ -202,6 +221,7 @@ async function saveReminderSettings(){
     reminderSettings.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     const { error } = await sb.from('reminder_settings').upsert({ user_id: user.id, ...reminderSettings }, { onConflict:'user_id' });
     if(error) throw error;
+    await removePushSubscriptionIfNoRemindersEnabled();
     if(typeof renderDashboard === 'function') renderDashboard();
     showToast('Reminders saved.');
   }catch(e){
