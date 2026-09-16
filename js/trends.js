@@ -107,7 +107,8 @@ function renderFoodCorrelation(){
   const flares = trendsStoolEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
   const foods = trendsFoodEntries;
   if(!flares.length || !foods.length){
-    el.innerHTML = '<div class="empty">Log some food and flagged symptoms to see patterns here.</div>';
+    el.innerHTML = '<div class="empty">Log some food and flagged symptoms to see patterns here.<br><button type="button" class="text-link-btn" id="emptyFoodTrendLogBtn">Go to Log</button></div>';
+    document.getElementById('emptyFoodTrendLogBtn').addEventListener('click', ()=> switchTab('log'));
     return;
   }
   const WINDOW_MS = 48*3600*1000;

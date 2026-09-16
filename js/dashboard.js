@@ -77,7 +77,8 @@ function renderRecentActivity(){
   const list = document.getElementById('recentActivityList');
   if(!list) return;
   if(!entries.length){
-    list.innerHTML = '<div class="empty">Nothing logged yet — your recent entries will show up here.</div>';
+    list.innerHTML = '<div class="empty">Nothing logged yet — your recent entries will show up here.<br><button type="button" class="text-link-btn" id="emptyLogNowBtn">Log your first entry</button></div>';
+    document.getElementById('emptyLogNowBtn').addEventListener('click', ()=> switchTab('log'));
     return;
   }
   const recent = entries.slice(0, RECENT_ACTIVITY_LIMIT);
@@ -157,20 +158,20 @@ function renderInsights(){
   const lines = [];
 
   const streak = currentStreak(streakTimestamps);
-  if(streak >= 2) lines.push(`🔥 You're on a ${streak}-day logging streak.`);
+  if(streak >= 2) lines.push({ text: `🔥 You're on a ${streak}-day logging streak.` });
 
   if(weeklyStoolEntries.length){
     const thisWeekFlagged = weeklyStoolEntries.filter(e=> e.tags.includes('blood') || e.tags.includes('urgent') || (e.pain!==null && e.pain>=2));
     lines.push(thisWeekFlagged.length
-      ? `📊 ${thisWeekFlagged.length} of ${weeklyStoolEntries.length} entries this week were flagged (blood, urgency, or pain 2+).`
-      : `📊 No flagged entries this week, out of ${weeklyStoolEntries.length} logged.`);
+      ? { text: `📊 ${thisWeekFlagged.length} of ${weeklyStoolEntries.length} entries this week were flagged (blood, urgency, or pain 2+).`, flare: true }
+      : { text: `📊 No flagged entries this week, out of ${weeklyStoolEntries.length} logged.` });
   }
 
   const topFood = topFoodFlareCorrelation();
-  if(topFood) lines.push(`🍽️ "${escapeHtml(topFood.name)}" has appeared before ${topFood.count} flagged entries — worth watching. See Trends for more.`);
+  if(topFood) lines.push({ text: `🍽️ "${escapeHtml(topFood.name)}" has appeared before ${topFood.count} flagged entries — worth watching. See Trends for more.`, flare: true });
 
   el.innerHTML = lines.length
-    ? lines.map(l=>`<div class="insight-line">${l}</div>`).join('')
+    ? lines.map(l=>`<div class="insight-line${l.flare ? ' flare' : ''}">${l.text}</div>`).join('')
     : `<div class="empty">Log a few more entries to start seeing insights here.</div>`;
 }
 

@@ -387,9 +387,23 @@ function renderRestrooms(){
   renderProfile();
   const list = document.getElementById('restList');
   if(!restrooms.length){
-    list.innerHTML = (restroomsAreaFilter || restroomsStarFilter)
-      ? '<div class="empty">No spots match that filter.</div>'
-      : '<div class="empty">No spots saved yet.</div>';
+    const filtered = restroomsAreaFilter || restroomsStarFilter;
+    list.innerHTML = filtered
+      ? '<div class="empty">No spots match that filter.<br><button type="button" class="text-link-btn" id="emptyClearFilterBtn">Clear filter</button></div>'
+      : '<div class="empty">No spots saved yet.<br><button type="button" class="text-link-btn" id="emptyAddSpotBtn">Save your first spot</button></div>';
+    if(filtered){
+      document.getElementById('emptyClearFilterBtn').addEventListener('click', ()=>{
+        document.getElementById('filterArea').value = '';
+        document.getElementById('filterStars').value = '0';
+        applyRestroomFilters();
+      });
+    } else {
+      document.getElementById('emptyAddSpotBtn').addEventListener('click', ()=>{
+        const nameInput = document.getElementById('restName');
+        nameInput.scrollIntoView({ behavior:'smooth', block:'center' });
+        nameInput.focus();
+      });
+    }
     return;
   }
   let html = restrooms.map(r=>{

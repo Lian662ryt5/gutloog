@@ -204,7 +204,23 @@
     -webkit-tap-highlight-color:transparent;
     touch-action:manipulation;
   }
-  .pdot.on{background:var(--ochre);border-color:var(--ochre);color:#fff;font-weight:700;}
+  /* A faint severity-colored underline, visible even before a value is
+     picked, so the row reads as a low-to-high scale at a glance rather
+     than four identical buttons. */
+  .pdot:nth-child(1){border-bottom:3px solid var(--teal-soft);}
+  .pdot:nth-child(2), .pdot:nth-child(3){border-bottom:3px solid color-mix(in srgb, var(--ochre) 30%, var(--surface));}
+  .pdot:nth-child(4){border-bottom:3px solid var(--brick-soft);}
+  .pdot.on{font-weight:700;}
+  /* A traffic-light severity read (calm -> caution -> alert) across the 4
+     discrete buttons, reusing color pairings already proven elsewhere in
+     this file (rest-linked-tag's teal-soft/teal-deep, tc-badge/pc-badge's
+     white-on-ochre, req-badge/tag.flag's brick-soft/brick) rather than
+     inventing new combinations - a blended in-between color for "Mild"
+     would need contrast-checking across all 6 themes, which none of the
+     app's existing color pairings need since they're already shipped. */
+  .pdot:nth-child(1).on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal-deep);}
+  .pdot:nth-child(2).on, .pdot:nth-child(3).on{background:var(--ochre);border-color:var(--ochre);color:#fff;}
+  .pdot:nth-child(4).on{background:var(--brick-soft);border-color:var(--brick);color:var(--brick);}
   textarea{
     width:100%;
     border:1.5px solid var(--line);
@@ -680,9 +696,9 @@
   }
   .hero-card .dash-today-line .flag{color:#FFDCCB;font-weight:700;}
   .hero-card .home-stats{position:relative;z-index:1;}
-  .hero-card .home-stats .stat{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);}
-  .hero-card .home-stats .stat .n{color:#fff;}
-  .hero-card .home-stats .stat .l{color:rgba(255,255,255,.72);}
+  .hero-card .home-stats .stat{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.36);}
+  .hero-card .home-stats .stat .n{color:#fff;font-size:22px;}
+  .hero-card .home-stats .stat .l{color:rgba(255,255,255,.85);font-weight:600;}
 
   .card-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
   .card-head-row h2{margin:0;}
@@ -703,6 +719,12 @@
   .insight-line{font-size:13.5px;line-height:1.5;padding:9px 0;border-bottom:1px solid var(--line);}
   .insight-line:last-child{border-bottom:none;padding-bottom:0;}
   .insight-line:first-child{padding-top:0;}
+  /* Flags flare-relevant insights (this week's flagged-entry count, a food
+     correlated with flares) so they read as worth-attention at a glance,
+     distinct from neutral ones like the streak line - same brick accent
+     already used for flagged entries/tags elsewhere in the app. */
+  .insight-line.flare{padding-left:10px;border-left:3px solid var(--brick);background:var(--brick-soft);border-radius:0 8px 8px 0;margin-bottom:2px;}
+  .insight-line.flare:last-child{padding-bottom:9px;}
 
   /* Home dashboard: mini trends preview */
   .dash-trend-bars{display:flex;align-items:flex-end;gap:6px;height:66px;margin-bottom:10px;}
