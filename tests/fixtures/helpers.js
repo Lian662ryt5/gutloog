@@ -60,6 +60,14 @@ async function mockJsPDF(page) {
   await page.route(JSPDF_CDN_URL, (route) =>
     route.fulfill({ path: FAKE_JSPDF_PATH, contentType: 'application/javascript' })
   );
+  // Deterministic default: no Web Share support, so every existing report
+  // test keeps exercising the plain-download path regardless of what the
+  // real browser/OS this suite happens to run on actually supports. A test
+  // that wants the share path overrides this again afterward - addInitScript
+  // calls apply in registration order, so the later one wins.
+  await page.addInitScript(() => {
+    Object.defineProperty(window.navigator, 'canShare', { value: () => false, configurable: true });
+  });
 }
 
 function isoAt(daysAgo, hour = 9) {

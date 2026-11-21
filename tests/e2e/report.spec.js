@@ -146,6 +146,56 @@ test.describe('doctor report - timezone-sensitive date defaults', () => {
   });
 });
 
+test.describe('doctor report - Web Share API support', () => {
+  test('shares the PDF via the Web Share API when the browser supports it, instead of downloading it', async ({ page }) => {
+    await mockSupabase(page, { entries: buildSeed() });
+    await mockJsPDF(page);
+    await page.addInitScript(() => {
+      Object.defineProperty(window.navigator, 'canShare', { value: () => true, configurable: true });
+      Object.defineProperty(window.navigator, 'share', {
+        value: async (data) => {
+          window.__lastShare = { filename: data.files[0].name, type: data.files[0].type, title: data.title };
+        },
+        configurable: true,
+      });
+    });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="trends"]');
+    await page.click('#reportPresets [data-preset="90"]');
+    await page.click('#generateReportBtn');
+    await expect(page.locator('#reportStatus')).toContainText('choose where to send it', { timeout: 5000 });
+
+    const share = await page.evaluate(() => window.__lastShare);
+    expect(share.filename).toMatch(/^gut-log-report-\d{4}-\d{2}-\d{2}-to-\d{4}-\d{2}-\d{2}\.pdf$/);
+    expect(share.type).toBe('application/pdf');
+
+    const saved = await page.evaluate(() => window.__lastPdf);
+    expect(saved).toBeUndefined(); // the share path must not also trigger a download
+  });
+
+  test('a cancelled share does not fall back to a surprise download', async ({ page }) => {
+    await mockSupabase(page, { entries: buildSeed() });
+    await mockJsPDF(page);
+    await page.addInitScript(() => {
+      Object.defineProperty(window.navigator, 'canShare', { value: () => true, configurable: true });
+      Object.defineProperty(window.navigator, 'share', {
+        value: async () => { const e = new Error('cancelled'); e.name = 'AbortError'; throw e; },
+        configurable: true,
+      });
+    });
+    await page.goto('/index.html');
+    await passConsentAndOnboarding(page);
+    await page.click('[data-tab="trends"]');
+    await page.click('#reportPresets [data-preset="90"]');
+    await page.click('#generateReportBtn');
+    await expect(page.locator('#reportStatus')).toContainText('Share cancelled.', { timeout: 5000 });
+
+    const saved = await page.evaluate(() => window.__lastPdf);
+    expect(saved).toBeUndefined();
+  });
+});
+
 test.describe('doctor report - long medication log', () => {
   test('a long medication log spans multiple PDF pages', async ({ page }) => {
     const entries = buildSeed().concat(

@@ -67,6 +67,10 @@
           savedAs: filename,
         };
       },
+      output(type) {
+        if (type === 'blob') return new Blob(['fake-pdf-bytes'], { type: 'application/pdf' });
+        return '';
+      },
     };
     return doc;
   }
