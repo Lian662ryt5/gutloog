@@ -9,11 +9,20 @@ const THEMES = [
 ];
 let activeTheme = 'default';
 
+// Device-local cache only - lets privacy.html/terms.html (plain static pages
+// with no Supabase client of their own) pick up the same look instantly, with
+// no network round-trip. The persisted choice for premium users still lives
+// in profiles.theme (chooseTheme below); this just mirrors whatever's
+// currently applied here, including a free user's unsaved preview, same as
+// this page already shows it.
+const THEME_CACHE_KEY = 'gutlog_theme_cache';
+
 function applyTheme(key){
   const html = document.documentElement;
   THEMES.forEach(t=>{ if(t.key !== 'default') html.classList.remove('theme-'+t.key); });
   if(key && key !== 'default'){ html.classList.add('theme-'+key); }
   activeTheme = key || 'default';
+  try{ localStorage.setItem(THEME_CACHE_KEY, activeTheme); }catch(e){}
   renderThemes();
 }
 
