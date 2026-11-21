@@ -11,6 +11,14 @@
     --brick:#B5533C; --brick-soft:#F3E1DC; --teal-soft:#DEE9E5;
     --shadow: 0 1px 2px rgba(30,42,40,0.06), 0 4px 14px rgba(30,42,40,0.05);
   }
+  /* Mirrors css/styles.css's theme tokens exactly, so this page matches
+     whatever look a premium user has applied in the app itself - see the
+     head script below for how the matching class gets here. */
+  html.theme-midnight{--ink:#E8ECF5;--ink-soft:#A6B0C8;--paper:#0F1420;--surface:#182034;--line:#2A3550;--teal:#5B8DEF;--teal-deep:#3A63C4;--ochre:#F0B429;--brick:#EF6262;--brick-soft:#3A2230;--teal-soft:#1E2A45;--shadow:0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);}
+  html.theme-forest{--ink:#E5F0E8;--ink-soft:#9DBBA4;--paper:#0E1A13;--surface:#16261C;--line:#28402F;--teal:#4CAF6D;--teal-deep:#2E7D4F;--ochre:#D9A441;--brick:#E2725B;--brick-soft:#3A241E;--teal-soft:#1C3324;--shadow:0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);}
+  html.theme-ocean{--ink:#E4F3F5;--ink-soft:#93B9C0;--paper:#08171C;--surface:#0F2730;--line:#1E3E47;--teal:#2FB8C6;--teal-deep:#1C7C88;--ochre:#F2C14E;--brick:#E8785A;--brick-soft:#2E1F1A;--teal-soft:#123640;--shadow:0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);}
+  html.theme-sunrise{--ink:#3A2A28;--ink-soft:#886962;--paper:#FFF3EA;--surface:#FFFFFF;--line:#F3DCC9;--teal:#F0805A;--teal-deep:#CD4C2B;--ochre:#966709;--brick:#CA2121;--brick-soft:#FCE1DC;--teal-soft:#FBE3D6;--shadow:0 1px 2px rgba(58,42,40,0.08), 0 4px 14px rgba(58,42,40,0.06);}
+  html.theme-purple-glow{--ink:#F1E9FB;--ink-soft:#B29FD1;--paper:#150B24;--surface:#211433;--line:#3B2456;--teal:#B26CF0;--teal-deep:#8A3FE0;--ochre:#F2A6E0;--brick:#FF6B9D;--brick-soft:#3A1E33;--teal-soft:#2B1846;--shadow:0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(138,63,224,0.25);}
   *{box-sizing:border-box;}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:60px;}
   .wrap{max-width:680px;margin:0 auto;padding:24px 20px 0;}
@@ -29,6 +37,19 @@
   .contact-box{background:var(--teal-soft);border:1px solid var(--teal);border-radius:10px;padding:14px 16px;margin:10px 0 20px;font-size:13.5px;}
   .foot-note{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:8px;padding:0 20px;line-height:1.5;}
 </style>
+<script>
+// Runs before body content paints, so there's no flash of the default
+// (light) theme before switching - reads the same gutlog_theme_cache key
+// js/themes.js's applyTheme() writes on every call, in the main app.
+(function(){
+  try{
+    var theme = localStorage.getItem('gutlog_theme_cache');
+    if(theme && theme !== 'default'){
+      document.documentElement.classList.add('theme-' + theme);
+    }
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -66,7 +87,7 @@
     <ul>
       <li><strong>Supabase</strong> — database, authentication, and file storage (hosted in the United Kingdom).</li>
       <li><strong>Stripe</strong> — payment processing for premium subscriptions. Stripe's own privacy policy governs the payment details you enter directly with them.</li>
-      <li><strong>Open Food Facts</strong> — an open food database we query using the barcode you scan, to fetch product names. The barcode is sent to their public API; no other personal data is sent.</li>
+      <li><strong>Open Food Facts</strong> — an open food database we query using the barcode you scan, to fetch product names and, when available, a product image. Your barcode is sent to their public API; the product image (if shown) is loaded directly from their servers in your browser, so your IP address is visible to them on that request too. No other personal data is sent.</li>
       <li><strong>Google Maps</strong> — used only when you tap "Open nearby restrooms in Maps," which opens Google Maps directly in your browser with your current coordinates in the URL. This happens outside the app; Google's own privacy policy applies to that search.</li>
       <li><strong>Your browser's push service</strong> (e.g. Google's FCM for Chrome, Mozilla's push service for Firefox) — if you enable reminders, the notification text is relayed through this service to your device, the same way it works for any website's push notifications. It only sees what's needed to deliver the notification.</li>
     </ul>
@@ -102,7 +123,7 @@
   <div class="card">
     <h2>8. International transfers, cookies & children</h2>
     <p><strong>International transfers.</strong> Our primary hosting is UK-based. Some processors above (e.g. Stripe) may process data outside the UK/EU under standard contractual safeguards.</p>
-    <p><strong>Cookies.</strong> The app itself does not use tracking or advertising cookies. It uses browser local storage to remember your consent choice, your sign-in session, and a few small non-personal flags (like which badges you've already seen and whether you've completed the app's intro) so they don't repeat unnecessarily. We also use a service worker to cache the app's own files for faster loading and offline use — see Section 5 for how long we keep data, and note the service worker never caches your entries or other account data, only the app's static files.</p>
+    <p><strong>Cookies.</strong> The app itself does not use tracking or advertising cookies. It uses browser local storage to remember your consent choice, your sign-in session, your selected visual theme, and a few small non-personal flags (like which badges you've already seen and whether you've completed the app's intro) so they don't repeat unnecessarily. We also use a service worker to cache the app's own files for faster loading and offline use — see Section 5 for how long we keep data, and note the service worker never caches your entries or other account data, only the app's static files.</p>
     <p><strong>Children.</strong> Gut Log is not directed at children under 16. We don't knowingly collect data from children under 16; if you believe a child has used the app, please contact us so we can delete the data.</p>
   </div>
 
