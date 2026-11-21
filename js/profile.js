@@ -217,5 +217,44 @@ function bindProfileEvents(){
       setTimeout(()=>{ copyAccountIdBtn.textContent = 'Copy'; }, 2000);
     });
   }
+
+  renderDeleteAccountSlot();
+}
+
+// Two-step confirm (a plain confirm() felt too light for something this
+// irreversible) reusing the existing .consent-panel pattern from the
+// restroom-report/location flows, just recolored to the app's brick
+// (danger) accent instead of teal.
+function renderDeleteAccountSlot(){
+  const slot = document.getElementById('deleteAccountSlot');
+  if(!slot) return;
+  slot.innerHTML = `<button class="loc-btn" type="button" id="deleteAccountBtn" style="border-color:var(--brick);background:var(--brick-soft);color:var(--brick);">Delete my account</button>`;
+  document.getElementById('deleteAccountBtn').addEventListener('click', ()=>{
+    slot.innerHTML = `
+      <div class="consent-panel" style="border-color:var(--brick);background:var(--brick-soft);color:var(--brick);">
+        This permanently deletes your account and all your logged entries. Restroom spots you've saved stay visible to others but are no longer tied to your account. This can't be undone.
+        <div class="cbtns">
+          <button class="allow" type="button" id="confirmDeleteAccountBtn" style="background:var(--brick);">Delete my account</button>
+          <button class="cancel" type="button" id="cancelDeleteAccountBtn" style="color:var(--brick);">Cancel</button>
+        </div>
+      </div>`;
+    document.getElementById('cancelDeleteAccountBtn').addEventListener('click', renderDeleteAccountSlot);
+    document.getElementById('confirmDeleteAccountBtn').addEventListener('click', async ()=>{
+      const btn = document.getElementById('confirmDeleteAccountBtn');
+      btn.disabled = true; btn.textContent = 'Deleting…';
+      try{
+        const { data, error } = await sb.functions.invoke('delete-account', { method: 'POST' });
+        if(error) throw error;
+        if(data && data.error) throw new Error(data.error);
+        await sb.auth.signOut();
+        localStorage.clear();
+        window.location.reload();
+      }catch(e){
+        console.error('account deletion failed', e);
+        alert(e.message || 'Could not delete your account — check your connection and try again, or contact support.');
+        btn.disabled = false; btn.textContent = 'Delete my account';
+      }
+    });
+  });
 }
 
