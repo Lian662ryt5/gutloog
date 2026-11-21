@@ -188,6 +188,22 @@
           },
           getUser: async () => ({ data: { user: { id: 'test-user' } } }),
           updateUser: async () => ({ error: null }),
+          signOut: async () => { currentSession = null; return { error: null }; },
+        },
+        // Mirrors the real delete-account edge function (see
+        // supabase/functions/delete-account/index.ts): deletes the user's
+        // own entries, detaches (doesn't delete) their restrooms since
+        // those are shared/public data, deletes the profile row, and ends
+        // the session - same effect admin.deleteUser() has client-side.
+        functions: {
+          invoke: async (name) => {
+            if (name !== 'delete-account') return { data: null, error: { message: `unmocked function: ${name}` } };
+            if (window.__deleteAccountFails) return { data: null, error: { message: 'simulated failure' } };
+            tables.entries = (tables.entries || []).filter((e) => e.user_id !== CURRENT_USER_ID);
+            (tables.restrooms || []).forEach((r) => { if (r.user_id === CURRENT_USER_ID) r.user_id = null; });
+            tables.profiles = (tables.profiles || []).filter((p) => p.id !== CURRENT_USER_ID);
+            return { data: { deleted: true }, error: null };
+          },
         },
         from: (t) => query(t),
         storage: {

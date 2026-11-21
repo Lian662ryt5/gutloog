@@ -396,8 +396,30 @@ async function generateDoctorReportPDF(fromDate, toDate){
   rptAddFooters(doc, rangeLabel);
 
   const filename = `gut-log-report-${fromDate}-to-${toDate}.pdf`;
+  return shareOrSavePDF(doc, filename);
+}
+
+// Offers the OS share sheet (AirDrop, Mail, Messages, "Save to Files", etc.)
+// when the browser supports sharing a File - the direct way to get this to
+// a doctor - falling back to the existing plain download everywhere else
+// (desktop browsers, or a browser whose canShare rejects a PDF file). A
+// user-cancelled share (AbortError) is left as a no-op rather than also
+// triggering a surprise download right after they dismissed the sheet.
+async function shareOrSavePDF(doc, filename){
+  if(navigator.canShare){
+    try{
+      const file = new File([doc.output('blob')], filename, { type: 'application/pdf' });
+      if(navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: 'Gut Log — Symptom Report' });
+        return { filename, shared: true, cancelled: false };
+      }
+    }catch(e){
+      if(e.name === 'AbortError') return { filename, shared: false, cancelled: true };
+      console.error('share failed, falling back to download', e);
+    }
+  }
   doc.save(filename);
-  return filename;
+  return { filename, shared: false, cancelled: false };
 }
 
 /* ---- UI wiring ---- */
@@ -460,9 +482,11 @@ document.getElementById('generateReportBtn')?.addEventListener('click', async ()
   btn.textContent = 'Generating…';
   statusEl.textContent = '';
   try{
-    await generateDoctorReportPDF(from, to);
+    const result = await generateDoctorReportPDF(from, to);
     statusEl.className = 'report-status ok';
-    statusEl.textContent = 'Report downloaded.';
+    statusEl.textContent = result.shared
+      ? 'Report ready — choose where to send it.'
+      : (result.cancelled ? 'Share cancelled.' : 'Report downloaded.');
   }catch(e){
     console.error('generate doctor report failed', e);
     statusEl.className = 'report-status err';

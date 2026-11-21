@@ -12,7 +12,12 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest: that alias rolled to ubuntu-26.04,
+    # which Playwright 1.56.1 doesn't yet support installing Chromium's
+    # system deps on ("ERROR: Playwright does not support chromium on
+    # ubuntu26.04-x64") - breaks the browser-install step before any test
+    # even runs, regardless of what changed in the PR.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5

@@ -225,6 +225,48 @@ async function saveFoodEntry(f){
   return true;
 }
 
+// Shared by medication (and anything else that's just a timestamp + an
+// optional note) - the same offline-queue/toast/render pattern saveFoodEntry
+// and the stool saveBtn handler already use, without food's photo/barcode
+// handling this kind doesn't need.
+async function saveSimpleEntry(kind, note){
+  const row = { ts: new Date().toISOString(), kind, note: note || '' };
+  let savedOnline = false;
+  try{
+    if(!navigator.onLine) throw new Error('offline');
+    const { data, error } = await sb.from('entries').insert(row).select().single();
+    if(error) throw error;
+    entries.unshift(rowToEntry(data));
+    savedOnline = true;
+    showToast(`${KIND_META[kind].label} logged.`);
+  }catch(e){
+    if(isNetworkError(e)){
+      const localId = await queueOfflineEntry(row);
+      const localEntry = rowToEntry(row);
+      localEntry.localId = localId;
+      localEntry.pendingSync = true;
+      entries.unshift(localEntry);
+      showToast('Saved offline. Will sync when connection is restored.');
+    } else {
+      console.error('save simple entry failed', e);
+      alert('Could not save — check your connection.');
+      return false;
+    }
+  }
+  render();
+  if(savedOnline){ loadAccountStats(); loadTrendsData(); }
+  return true;
+}
+
+document.getElementById('medicationLogBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('medicationNoteInput');
+  const btn = document.getElementById('medicationLogBtn');
+  btn.disabled = true; btn.textContent = 'Logging…';
+  const ok = await saveSimpleEntry('medication', input.value.trim());
+  if(ok) input.value = '';
+  btn.disabled = false; btn.textContent = '💊 Log';
+});
+
 function dayLabel(d){
   const today = new Date(); today.setHours(0,0,0,0);
   const yest = new Date(today); yest.setDate(yest.getDate()-1);
